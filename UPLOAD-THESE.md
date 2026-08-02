@@ -1,33 +1,19 @@
-# Girard native — icon + one-blue + gold wordmark + OTA (upload all these)
+# Girard native — colour revert to deep navy
 
-Replace/add these files in your girard-native repo, then do ONE build.
-After this build, future TEXT/COLOUR/SCREEN changes reach phones over-the-air
-(just by committing to main) — no more builds for those.
+Reverts the blue back to the previous navy (#0F2438), including the icon background.
+The gold emblem and gold wordmark are unchanged.
 
-Files:
-  package.json                          <- adds expo-updates (OTA engine)
-  app.json                              <- OTA config + one blue (#0C2161) splash
-  src/theme.js                          <- one blue everywhere (#0C2161)
-  src/screens/SignInScreen.js           <- logo + gold "GIRARD PROPERTY / ESTATE LIMITED"
-  src/screens/SignUpScreen.js           <- same
-  assets/icon.png                       <- your emblem app icon
-  assets/splash.png                     <- launch screen
-  assets/logo.png                       <- gold emblem on the sign-in screen
-  .eas/workflows/publish-update.yml     <- auto-publishes OTA updates on commit to main
+Replace these files in your girard-native repo:
+  app.json           <- splash + adaptive-icon background back to #0F2438
+  src/theme.js       <- app screens back to deep navy #0F2438 / ink #16324F
+  assets/icon.png    <- emblem recoloured onto deep navy
+  assets/splash.png  <- matching launch screen
 
 ## Upload (no Terminal)
-1. GitHub -> girard-native repo -> Add file -> Upload files.
-2. Drag ALL the folders from this update (assets, src, .eas) AND the two loose
-   files (package.json, app.json) into the box. GitHub keeps paths & overwrites.
-   NOTE: the ".eas" folder starts with a dot; if your Mac hides it, press
-   Cmd+Shift+. (period) in Finder to show hidden folders, then drag it in.
-3. Commit changes.
+GitHub -> girard-native repo -> Add file -> Upload files ->
+drag in `app.json`, the `src` folder, and the `assets` folder -> Commit.
 
-## Then build ONCE
-Builds -> Build from GitHub -> main -> profile: preview -> Platform: Android -> Confirm.
-
-## After that (the magic)
-- Small changes (wording, colours, new screens) -> I give you updated files ->
-  you commit to main -> the workflow publishes an OTA update -> your phone gets it
-  on the next open. NO build, NO build-quota used.
-- Icon / splash / native config changes -> still need a build (native can't go OTA).
+## Then
+- The icon/splash/background are NATIVE, so this needs ONE build:
+  Builds -> Build from GitHub -> main -> preview -> Android -> Confirm.
+- (Text-only changes could go over-the-air, but the icon colour cannot, so a build is needed here.)
