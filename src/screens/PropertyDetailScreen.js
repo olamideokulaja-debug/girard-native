@@ -13,7 +13,7 @@ function photoList(p) {
   const out = [];
   const ph = p.photos;
   if (Array.isArray(ph)) for (const f of ph) {
-    if (typeof f === "string" && f.startsWith("http")) out.push(f);
+    if (typeof f === "string" && (f.startsWith("http") || f.startsWith("data:"))) out.push(f);
     else if (f && typeof f === "object" && typeof f.url === "string") out.push(f.url);
   }
   return out;

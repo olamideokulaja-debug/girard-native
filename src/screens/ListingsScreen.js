@@ -19,7 +19,7 @@ function firstPhoto(p) {
   const ph = p.photos;
   if (Array.isArray(ph) && ph.length) {
     const f = ph[0];
-    if (typeof f === "string" && f.startsWith("http")) return f;
+    if (typeof f === "string" && (f.startsWith("http") || f.startsWith("data:"))) return f;
     if (f && typeof f === "object" && typeof f.url === "string") return f.url;
   }
   return null;
@@ -39,7 +39,7 @@ export default function ListingsScreen({ navigation }) {
       .select("*")
       .order("updated_at", { ascending: false });
     if (error) { setError(error.message); setItems([]); }
-    else setItems((data || []).map(rowToProp));
+    else setItems((data || []).map(rowToProp).filter(p => p.status === "Available"));
     setLoading(false);
     setRefreshing(false);
   }, []);
