@@ -45,6 +45,10 @@ export default function ListingsScreen({ navigation }) {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const unsub = navigation.addListener("focus", load);
+    return unsub;
+  }, [navigation, load]);
 
   const onRefresh = () => { setRefreshing(true); load(); };
 

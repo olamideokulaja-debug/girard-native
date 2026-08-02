@@ -25,7 +25,8 @@ export default function PropertyDetailScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const p = (route.params && route.params.property) || {};
   const photos = photoList(p);
-  const verified = p.status && p.status !== "Pending Verification";
+  const [status, setStatus] = useState(p.status);
+  const verified = status && status !== "Pending Verification";
   const amenities = Array.isArray(p.amenities) ? p.amenities : [];
   const [paying, setPaying] = useState(false);
 
@@ -60,7 +61,8 @@ export default function PropertyDetailScreen({ route, navigation }) {
       const vRes = await fetch(SITE + "/api/paystack-verify?reference=" + encodeURIComponent(init.reference));
       const v = await vRes.json();
       if (v && v.status === "success") {
-        Alert.alert("Payment successful", "Your payment for " + (p.title || "this property") + " was received.");
+        setStatus("Leased");
+        Alert.alert("Payment successful", "Your payment for " + (p.title || "this property") + " was received.", [{ text: "OK", onPress: () => navigation.goBack() }]);
       } else {
         Alert.alert("Not confirmed", "We couldn't confirm the payment. If you completed it, it will reflect shortly.");
       }
@@ -123,8 +125,8 @@ export default function PropertyDetailScreen({ route, navigation }) {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <TouchableOpacity style={styles.payBtn} onPress={onPayBook} disabled={paying}>
-          <Text style={styles.payText}>{paying ? "Starting payment\u2026" : (p.rent ? "Pay " + money(p.rent) + " / yr" : "Pay / Book")}</Text>
+        <TouchableOpacity style={[styles.payBtn, status !== "Available" && { backgroundColor: "#3A5470" }]} onPress={onPayBook} disabled={paying || status !== "Available"}>
+          <Text style={styles.payText}>{status !== "Available" ? "Leased" : (paying ? "Starting payment\u2026" : (p.rent ? "Pay " + money(p.rent) + " / yr" : "Pay / Book"))}</Text>
         </TouchableOpacity>
       </View>
     </View>
