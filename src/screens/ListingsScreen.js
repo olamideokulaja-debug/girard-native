@@ -25,7 +25,7 @@ function firstPhoto(p) {
   return null;
 }
 
-export default function ListingsScreen() {
+export default function ListingsScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ export default function ListingsScreen() {
     const photo = firstPhoto(item);
     const verified = item.status && item.status !== "Pending Verification";
     return (
-      <TouchableOpacity activeOpacity={0.85} style={styles.card}>
+      <TouchableOpacity activeOpacity={0.85} style={styles.card} onPress={() => navigation.navigate("PropertyDetail", { property: item })}>
         {photo ? (
           <Image source={{ uri: photo }} style={styles.photo} resizeMode="cover" />
         ) : (
@@ -80,8 +80,8 @@ export default function ListingsScreen() {
   return (
     <View style={styles.wrap}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <View>
-          <Text style={styles.brand}>GIRARD</Text>
+        <View style={styles.headerLeft}>
+          <Image source={require("../../assets/logo.png")} style={styles.headerLogo} resizeMode="contain" />
           <Text style={styles.brandSub}>Browse verified property</Text>
         </View>
         <TouchableOpacity onPress={() => supabase.auth.signOut()}>
@@ -116,7 +116,8 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.deep },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end",
     paddingHorizontal: 18, paddingBottom: 14, backgroundColor: colors.ink },
-  brand: { color: colors.gold, fontSize: 22, fontWeight: "800", letterSpacing: 2 },
+  headerLeft: { flexDirection: "row", alignItems: "center" },
+  headerLogo: { width: 40, height: 40, marginRight: 10 },
   brandSub: { color: colors.slate, fontSize: 12, marginTop: 2 },
   signout: { color: "#C7D3E0", fontSize: 13, fontWeight: "600" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 30 },

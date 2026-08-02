@@ -14,6 +14,7 @@ import { colors } from "./src/theme";
 import SignInScreen from "./src/screens/SignInScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
 import ListingsScreen from "./src/screens/ListingsScreen";
+import PropertyDetailScreen from "./src/screens/PropertyDetailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -46,7 +47,10 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {session ? (
-            <Stack.Screen name="Listings" component={ListingsScreen} />
+            <>
+              <Stack.Screen name="Listings" component={ListingsScreen} />
+              <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
+            </>
           ) : (
             <>
               <Stack.Screen name="SignIn" component={SignInScreen} />
