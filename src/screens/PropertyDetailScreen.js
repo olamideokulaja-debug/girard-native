@@ -54,7 +54,8 @@ export default function PropertyDetailScreen({ route, navigation }) {
         Alert.alert("Payment error", (init && init.error) || "Could not start the payment.");
         setPaying(false); return;
       }
-      await WebBrowser.openBrowserAsync(init.authorization_url);
+      // Opens Paystack checkout and auto-returns when it redirects to girard://pay-return
+      await WebBrowser.openAuthSessionAsync(init.authorization_url, "girard://pay-return");
       // After the checkout closes, confirm the payment really went through.
       const vRes = await fetch(SITE + "/api/paystack-verify?reference=" + encodeURIComponent(init.reference));
       const v = await vRes.json();
