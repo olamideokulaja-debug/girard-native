@@ -11,20 +11,37 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0F2438"
+      "backgroundColor": "#0C2161"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.girardpropertylimited.app",
       "buildNumber": "1",
-      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.girardpropertylimited.twa",
       "versionCode": 1,
-      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#0F2438" }
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0C2161"
+      }
     },
-    "extra": { "eas": { "projectId": "e3e515b9-2462-4751-b24e-0a521c126ffd" } }
+    "extra": {
+      "eas": {
+        "projectId": "e3e515b9-2462-4751-b24e-0a521c126ffd"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e3e515b9-2462-4751-b24e-0a521c126ffd"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
