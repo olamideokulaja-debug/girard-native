@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Girard",
+    "slug": "girard",
+    "owner": "olamideokulaja",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "girard",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F2438"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.girardpropertylimited.app",
+      "buildNumber": "1",
+      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+    },
+    "android": {
+      "package": "com.girardpropertylimited.twa",
+      "versionCode": 1,
+      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#0F2438" }
+    },
+    "extra": { "eas": { "projectId": "e3e515b9-2462-4751-b24e-0a521c126ffd" } }
+  }
+}
