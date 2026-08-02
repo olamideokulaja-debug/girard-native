@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, Image, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,8 +35,9 @@ export default function SignUpScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.deep }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={[styles.wrap, { paddingTop: insets.top + 30 }]} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>GIRARD</Text>
-        <Text style={styles.brandSub}>PROPERTY LIMITED</Text>
+        <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
+        <Text style={styles.brand}>GIRARD PROPERTY</Text>
+        <Text style={styles.brandSub}>ESTATE LIMITED</Text>
         <Text style={styles.h1}>Create your account</Text>
         <Text style={styles.sub}>Join Girard to browse and manage verified property.</Text>
 
@@ -70,8 +71,9 @@ export default function SignUpScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: 26, paddingBottom: 60 },
-  brand: { color: colors.gold, fontSize: 26, fontWeight: "800", letterSpacing: 2 },
-  brandSub: { color: colors.slate, fontSize: 11, letterSpacing: 4, marginBottom: 30 },
+  logo: { width: 120, height: 120, alignSelf: "center", marginBottom: 14 },
+  brand: { color: colors.gold, fontSize: 20, fontWeight: "800", letterSpacing: 3, textAlign: "center" },
+  brandSub: { color: colors.gold, fontSize: 11, letterSpacing: 5, marginBottom: 30, textAlign: "center", opacity: 0.9 },
   h1: { color: "#fff", fontSize: 28, fontWeight: "800", marginBottom: 6 },
   sub: { color: colors.slate, fontSize: 14, marginBottom: 20 },
   label: { color: "#C7D3E0", fontSize: 13, marginBottom: 7, marginTop: 12, fontWeight: "600" },
