@@ -13,7 +13,7 @@ import { supabase } from "./src/lib/supabase";
 import { colors } from "./src/theme";
 import SignInScreen from "./src/screens/SignInScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
-import HomeScreen from "./src/screens/HomeScreen";
+import ListingsScreen from "./src/screens/ListingsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -46,7 +46,7 @@ export default function App() {
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {session ? (
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Listings" component={ListingsScreen} />
           ) : (
             <>
               <Stack.Screen name="SignIn" component={SignInScreen} />
