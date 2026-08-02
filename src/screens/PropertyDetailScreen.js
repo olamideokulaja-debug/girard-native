@@ -1,9 +1,11 @@
 // Property detail — full listing page. Opened by tapping a card in the feed.
-import React from "react";
+import React, { useState } from "react";
 import {
   View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as WebBrowser from "expo-web-browser";
+import { supabase } from "../lib/supabase";
 import { colors } from "../theme";
 
 const { width } = Dimensions.get("window");
@@ -25,6 +27,47 @@ export default function PropertyDetailScreen({ route, navigation }) {
   const photos = photoList(p);
   const verified = p.status && p.status !== "Pending Verification";
   const amenities = Array.isArray(p.amenities) ? p.amenities : [];
+  const [paying, setPaying] = useState(false);
+
+  const SITE = "https://girardpropertylimited.com";
+  const onPayBook = async () => {
+    if (paying) return;
+    const amountKobo = Math.round(Number(p.rent || 0) * 100);
+    if (!amountKobo) { Alert.alert("No price set", "This listing has no rent to pay yet."); return; }
+    setPaying(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const email = (u && u.user && u.user.email) || "customer@girardpropertylimited.com";
+      const initRes = await fetch(SITE + "/api/paystack-initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          amount: amountKobo,
+          subaccount: p.subaccount || undefined,
+          split_code: p.split_code || undefined,
+          metadata: { property: p.id, title: p.title },
+        }),
+      });
+      const init = await initRes.json();
+      if (!init || !init.authorization_url) {
+        Alert.alert("Payment error", (init && init.error) || "Could not start the payment.");
+        setPaying(false); return;
+      }
+      await WebBrowser.openBrowserAsync(init.authorization_url);
+      // After the checkout closes, confirm the payment really went through.
+      const vRes = await fetch(SITE + "/api/paystack-verify?reference=" + encodeURIComponent(init.reference));
+      const v = await vRes.json();
+      if (v && v.status === "success") {
+        Alert.alert("Payment successful", "Your payment for " + (p.title || "this property") + " was received.");
+      } else {
+        Alert.alert("Not confirmed", "We couldn't confirm the payment. If you completed it, it will reflect shortly.");
+      }
+    } catch (e) {
+      Alert.alert("Payment error", String((e && e.message) || e));
+    }
+    setPaying(false);
+  };
 
   return (
     <View style={styles.wrap}>
@@ -79,11 +122,8 @@ export default function PropertyDetailScreen({ route, navigation }) {
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <TouchableOpacity
-          style={styles.payBtn}
-          onPress={() => Alert.alert("Coming soon", "Booking and rent payment will be available shortly.")}
-        >
-          <Text style={styles.payText}>Pay / Book</Text>
+        <TouchableOpacity style={styles.payBtn} onPress={onPayBook} disabled={paying}>
+          <Text style={styles.payText}>{paying ? "Starting payment\u2026" : (p.rent ? "Pay " + money(p.rent) + " / yr" : "Pay / Book")}</Text>
         </TouchableOpacity>
       </View>
     </View>
