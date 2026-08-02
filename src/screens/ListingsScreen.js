@@ -88,8 +88,8 @@ export default function ListingsScreen({ navigation }) {
           <Image source={require("../../assets/logo.png")} style={styles.headerLogo} resizeMode="contain" />
           <Text style={styles.brandSub}>Browse verified property</Text>
         </View>
-        <TouchableOpacity onPress={() => supabase.auth.signOut()}>
-          <Text style={styles.signout}>Sign out</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+          <Text style={styles.signout}>Account</Text>
         </TouchableOpacity>
       </View>
 

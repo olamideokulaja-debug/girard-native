@@ -1,13 +1,16 @@
-# App: reflect "Leased" instantly after payment (JavaScript-only)
+# App: Account / Profile screen (JavaScript-only)
 
-The server already flips a long-let to "Leased" on payment (confirmed working).
-These changes make the APP show it right away instead of needing a manual refresh.
+New native Account screen (name, email, role, support links, sign out),
+reached by tapping "Account" in the top-right of the Browse screen.
 
 Files:
-  src/screens/PropertyDetailScreen.js  <- on payment success: marks Leased, button shows "Leased", returns to the feed
-  src/screens/ListingsScreen.js        <- feed refetches every time it regains focus (so the leased one drops off)
+  App.js                             <- adds the Profile screen to navigation
+  src/screens/ProfileScreen.js       <- NEW: the Account screen
+  src/screens/ListingsScreen.js      <- header "Sign out" is now "Account" (sign-out moved into Account)
 
 ## Ship it
-GitHub -> girard-native -> Add file -> Upload files -> drag the `src` folder -> Commit to main.
+GitHub -> girard-native -> Add file -> Upload files -> drag App.js and the src folder -> Commit to main.
 Reopen the app twice (over-the-air). If it doesn't take effect, do one build:
 Builds -> Build from GitHub -> main -> preview -> Android -> Confirm.
+
+No new dependency, so no version risk. Sign out now lives inside Account.
