@@ -33,14 +33,14 @@ function firstPhoto(p) {
   return null;
 }
 
-export default function ListingsScreen({ navigation }) {
+export default function ListingsScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
-  const [intent, setIntent] = useState("All");
+  const [intent, setIntent] = useState((route && route.params && route.params.initialIntent) || "All");
   const [beds, setBeds] = useState("Any");
   const [favs, setFavs] = useState([]);
   const [savedOnly, setSavedOnly] = useState(false);
@@ -58,6 +58,7 @@ export default function ListingsScreen({ navigation }) {
   }, []);
 
   useEffect(() => { load(); loadFavs().then(setFavs); }, [load]);
+  useEffect(() => { const it = route && route.params && route.params.initialIntent; if (it) setIntent(it); }, [route && route.params && route.params.initialIntent]);
   useEffect(() => {
     const unsub = navigation.addListener("focus", () => { load(); loadFavs().then(setFavs); });
     return unsub;

@@ -85,11 +85,13 @@ export default function DashboardScreen({ navigation }) {
             <Text style={styles.section}>{isAdmin ? "ADMIN" : "LANDLORD"}</Text>
             <Action label={isAdmin ? "Verify listings" : "My listings"} sub={isAdmin ? (stats.pending + " pending verification") : (stats.mine + " listed")} onPress={() => navigation.navigate("MyListings")} />
             <Action label="Add a property" sub="List a new property" onPress={() => navigation.navigate("AddProperty")} />
+            <Action label="Enquiries" sub="Leads on your listings" onPress={() => navigation.navigate("Enquiries")} />
+            <Action label="Earnings" sub="What you\u2019ve received + payout account" onPress={() => navigation.navigate("Earnings")} />
           </View>
         ) : null}
 
         <Text style={styles.section}>MORE ON GIRARD</Text>
-        <Action label="Investor deals" sub={isInvestor ? "Your opportunities" : "Available on the website"} onPress={() => Linking.openURL("https://girardpropertylimited.com")} />
+        <Action label="Investor deals" sub="For-sale opportunities" onPress={() => navigation.navigate("Browse", { initialIntent: "For sale" })} />
         <Action label="Property swap" sub="Available on the website" onPress={() => Linking.openURL("https://girardpropertylimited.com")} />
       </ScrollView>
     </View>

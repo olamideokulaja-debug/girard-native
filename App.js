@@ -23,6 +23,8 @@ import ProfileScreen from "./src/screens/ProfileScreen";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import MyListingsScreen from "./src/screens/MyListingsScreen";
 import AddPropertyScreen from "./src/screens/AddPropertyScreen";
+import EnquiriesScreen from "./src/screens/EnquiriesScreen";
+import EarningsScreen from "./src/screens/EarningsScreen";
 import LockScreen from "./src/screens/LockScreen";
 import MessagesScreen from "./src/screens/MessagesScreen";
 import { isBioEnabled } from "./src/lib/lock";
@@ -126,6 +128,8 @@ export default function App() {
               <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
               <Stack.Screen name="MyListings" component={MyListingsScreen} />
               <Stack.Screen name="AddProperty" component={AddPropertyScreen} />
+              <Stack.Screen name="Enquiries" component={EnquiriesScreen} />
+              <Stack.Screen name="Earnings" component={EarningsScreen} />
             </>
           ) : (
             <>
