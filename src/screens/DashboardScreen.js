@@ -7,6 +7,8 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../lib/supabase";
 import { loadFavs } from "../lib/favourites";
+import { BarChart, SegmentBar, CountUp, FadeInUp, ProgressBar } from "../components/Charts";
+import { DonutChart, LineChart } from "../components/SvgCharts";
 import { colors } from "../theme";
 
 const ADMIN_DOMAIN = "girardpropertylimited.com";
@@ -45,6 +47,7 @@ export default function DashboardScreen({ navigation }) {
   const [ownsListings, setOwnsListings] = useState(false);
   const [workspace, setWorkspace] = useState("Tenant");
   const [stats, setStats] = useState({ saved: 0, payments: 0, mine: 0, pending: 0 });
+  const [chart, setChart] = useState({ avail: 0, pend: 0, leased: 0, areas: [], toLet: 0, forSale: 0 });
   const [refreshing, setRefreshing] = useState(false);
   const [wsOpen, setWsOpen] = useState(false);
 
@@ -58,13 +61,23 @@ export default function DashboardScreen({ navigation }) {
     setIsAdmin(admin);
 
     let mine = 0, pending = 0, payments = 0, saved = 0;
+    let avail = 0, pend = 0, leased = 0, toLet = 0, forSale = 0; const areaMap = {};
     try {
-      const { data: props } = await supabase.from("properties").select("owner_email,status");
+      const { data: props } = await supabase.from("properties").select("owner_email,status,data");
       (props || []).forEach(p => {
         if ((p.owner_email || "").toLowerCase() === email.toLowerCase()) mine++;
         if (admin && p.status === "Pending Verification") pending++;
+        const d = p.data || {};
+        if (p.status === "Available") {
+          avail++;
+          if (d.area) areaMap[d.area] = (areaMap[d.area] || 0) + 1;
+          if (d.intent === "For sale") forSale++; else toLet++;
+        } else if (p.status === "Pending Verification") pend++;
+        else if (p.status === "Leased") leased++;
       });
     } catch (e) {}
+    const areas = Object.keys(areaMap).map(k => ({ label: k, value: areaMap[k] })).sort((a, b) => b.value - a.value).slice(0, 5);
+    setChart({ avail, pend, leased, areas, toLet, forSale });
     try { const { data: pays } = await supabase.from("payments").select("id"); payments = (pays || []).length; } catch (e) {}
     try { saved = (await loadFavs()).length; } catch (e) {}
     setOwnsListings(mine > 0);
@@ -108,10 +121,37 @@ export default function DashboardScreen({ navigation }) {
         <View style={styles.statsRow}>
           {statList.map(([label, value]) => (
             <View key={label} style={styles.stat}>
-              <Text style={styles.statValue}>{value}</Text>
+              <CountUp value={value} style={styles.statValue} />
               <Text style={styles.statLabel}>{label}</Text>
             </View>
           ))}
+        </View>
+
+        <Text style={styles.section}>MARKET INSIGHTS</Text>
+        <View style={{ paddingHorizontal: 16 }}>
+          {chart.areas.length > 0 ? (
+            <FadeInUp style={styles.chartCard}>
+              <Text style={styles.chartTitle}>Available by area</Text>
+              <BarChart data={chart.areas} height={150} />
+            </FadeInUp>
+          ) : null}
+          <FadeInUp delay={80} style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Listings by status</Text>
+            <DonutChart centerLabel="listings" segments={[
+              { label: "Available", value: chart.avail, color: colors.gold },
+              { label: "Pending", value: chart.pend, color: "#E9A23B" },
+              { label: "Leased", value: chart.leased, color: colors.teal },
+            ]} />
+          </FadeInUp>
+          {(chart.toLet + chart.forSale) > 0 ? (
+            <FadeInUp delay={140} style={styles.chartCard}>
+              <Text style={styles.chartTitle}>Available: to let vs for sale</Text>
+              <SegmentBar segments={[
+                { label: "To let", value: chart.toLet, color: colors.teal },
+                { label: "For sale", value: chart.forSale, color: "#6E59C7" },
+              ]} />
+            </FadeInUp>
+          ) : null}
         </View>
 
         <Text style={styles.section}>{workspace.toUpperCase()} TOOLS</Text>
@@ -159,6 +199,8 @@ const styles = StyleSheet.create({
   statValue: { color: colors.gold, fontSize: 24, fontWeight: "800" },
   statLabel: { color: colors.slate, fontSize: 12, marginTop: 4 },
   section: { color: colors.slate, fontSize: 12, fontWeight: "700", letterSpacing: 1, marginTop: 22, marginBottom: 12, marginLeft: 18 },
+  chartCard: { backgroundColor: colors.ink, borderRadius: 14, borderWidth: 1, borderColor: "#22405E", padding: 16, marginBottom: 12 },
+  chartTitle: { color: "#fff", fontSize: 14.5, fontWeight: "700", marginBottom: 16 },
   action: { flexDirection: "row", alignItems: "center", backgroundColor: colors.ink, borderRadius: 14, borderWidth: 1, borderColor: "#22405E", padding: 14, marginBottom: 11 },
   actionIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(201,162,75,0.12)", alignItems: "center", justifyContent: "center", marginRight: 14 },
   actionLabel: { color: "#fff", fontSize: 15.5, fontWeight: "700" },

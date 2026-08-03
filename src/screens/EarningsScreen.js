@@ -5,6 +5,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { CountUp } from "../components/Charts";
+import { LineChart } from "../components/SvgCharts";
 import { colors } from "../theme";
 
 const SITE = "https://girardpropertylimited.com";
@@ -46,9 +48,26 @@ export default function EarningsScreen({ navigation }) {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}>
           <View style={styles.hero}>
             <Text style={styles.heroLabel}>Your share received (after Girard 5%)</Text>
-            <Text style={styles.heroValue}>{money(data.net)}</Text>
+            <CountUp value={Math.round((data.net || 0) / 100)} style={styles.heroValue} format={(n) => "₦" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} />
             <Text style={styles.heroSub}>{money(data.total)} gross  \u00b7  {data.count} payment{data.count === 1 ? "" : "s"}  \u00b7  {data.listings} listing{data.listings === 1 ? "" : "s"}</Text>
           </View>
+
+          {(() => {
+            const MONb = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+            const buckets = {};
+            (data.recent || []).slice().reverse().forEach(p => {
+              const d = new Date(p.paid_at);
+              const key = isNaN(d) ? "—" : MONb[d.getMonth()];
+              buckets[key] = (buckets[key] || 0) + Math.round((Number(p.amount || 0) / 100) * 0.95 / 1000);
+            });
+            const bars = Object.keys(buckets).slice(-6).map(k => ({ label: k, value: buckets[k] }));
+            return bars.length ? (
+              <View>
+                <Text style={styles.section}>MONTHLY RECEIVED (₦’000)</Text>
+                <View style={styles.card}><LineChart data={bars} color={colors.teal} /></View>
+              </View>
+            ) : null;
+          })()}
 
           <Text style={styles.section}>PAYOUT ACCOUNT</Text>
           <View style={styles.card}>
