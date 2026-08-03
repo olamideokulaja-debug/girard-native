@@ -30,6 +30,7 @@ import LockScreen from "./src/screens/LockScreen";
 import MessagesScreen from "./src/screens/MessagesScreen";
 import { isBioEnabled } from "./src/lib/lock";
 import { registerForPush } from "./src/lib/push";
+import ErrorBoundary from "./src/components/ErrorBoundary";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -94,7 +95,7 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <StatusBar style="light" />
-        <OnboardingScreen onDone={() => { AsyncStorage.setItem("girard_onboarded", "1"); setOnboarded(true); }} />
+        <ErrorBoundary><OnboardingScreen onDone={() => { AsyncStorage.setItem("girard_onboarded", "1"); setOnboarded(true); }} /></ErrorBoundary>
       </SafeAreaProvider>
     );
   }
@@ -103,7 +104,7 @@ export default function App() {
     return (
       <SafeAreaProvider>
         <StatusBar style="light" />
-        <LockScreen onUnlock={() => setLocked(false)} />
+        <ErrorBoundary><LockScreen onUnlock={() => setLocked(false)} /></ErrorBoundary>
       </SafeAreaProvider>
     );
   }
@@ -122,6 +123,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
+      <ErrorBoundary>
       <NavigationContainer linking={linking}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {session ? (
@@ -142,6 +144,7 @@ export default function App() {
           )}
         </Stack.Navigator>
       </NavigationContainer>
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }

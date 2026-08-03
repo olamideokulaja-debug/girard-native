@@ -1,6 +1,6 @@
 // Browse listings — native property feed reading your real `properties` table.
 // Mirrors the website's rowToProp: spread row.data, then id + status on top.
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View, Text, FlatList, Image, TouchableOpacity, StyleSheet,
   ActivityIndicator, RefreshControl, TextInput, ScrollView, Animated,
