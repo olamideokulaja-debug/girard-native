@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { colors } from "../theme";
 
-const money = (n) => "\u20a6" + Number(n || 0).toLocaleString();
+const money = (n) => "\u20a6" + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 const ADMIN_DOMAIN = "girardpropertylimited.com";
 function rowToProp(r) { return { ...(r.data || {}), id: r.id, status: r.status, owner_email: r.owner_email }; }
 

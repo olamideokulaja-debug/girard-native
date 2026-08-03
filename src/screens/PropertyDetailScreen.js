@@ -10,7 +10,7 @@ import { colors } from "../theme";
 import ShortLetBooking from "../components/ShortLetBooking";
 
 const { width } = Dimensions.get("window");
-const money = (n) => "₦" + Number(n || 0).toLocaleString();
+const money = (n) => "\u20a6" + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 function photoList(p) {
   const out = [];
@@ -24,7 +24,11 @@ function photoList(p) {
 
 export default function PropertyDetailScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const [p, setP] = useState((route.params && route.params.property) || {});
+  const initial = (route.params && route.params.property) || {};
+  const [p, setP] = useState(initial);
+  const [status, setStatus] = useState(initial.status);
+  const [paying, setPaying] = useState(false);
+  const [photoIdx, setPhotoIdx] = useState(0);
   const routeId = (route.params && route.params.id) || (p && p.id);
   useEffect(() => {
     if ((!p || !p.title) && routeId) {
@@ -34,12 +38,9 @@ export default function PropertyDetailScreen({ route, navigation }) {
     }
   }, [routeId]);
   const photos = photoList(p);
-  const [status, setStatus] = useState(p.status);
   const verified = status && status !== "Pending Verification";
   const amenities = Array.isArray(p.amenities) ? p.amenities : [];
   const isShortLet = p.letType === "Short let" || p.letType === "Holiday stay / serviced";
-  const [paying, setPaying] = useState(false);
-  const [photoIdx, setPhotoIdx] = useState(0);
 
   const onReport = () => {
     const reasons = ["Not available / already taken", "Suspected fraud or fake", "Wrong price or details", "Other"];

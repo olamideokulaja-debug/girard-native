@@ -10,7 +10,7 @@ import { supabase } from "../lib/supabase";
 import { colors } from "../theme";
 import { loadFavs, toggleFav } from "../lib/favourites";
 
-const money = (n) => "₦" + Number(n || 0).toLocaleString();
+const money = (n) => "\u20a6" + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 function rowToProp(r) {
   return { ...(r.data || {}), id: r.id, status: r.status, girardManaged: !!r.girard_managed };

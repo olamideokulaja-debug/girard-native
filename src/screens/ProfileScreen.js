@@ -20,8 +20,9 @@ export default function ProfileScreen({ navigation }) {
       .catch(() => setPayments([]));
   }, []);
 
-  const money = (kobo) => "\u20a6" + Number((kobo || 0) / 100).toLocaleString();
-  const dateStr = (iso) => { try { return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } };
+  const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const money = (kobo) => "\u20a6" + String(Math.round(Number(kobo || 0) / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const dateStr = (iso) => { try { const x = new Date(iso); if (isNaN(x)) return ""; return x.getDate() + " " + MON[x.getMonth()] + " " + x.getFullYear(); } catch (e) { return ""; } };
   const onToggleBio = async (val) => {
     if (val) {
       const ok = await bioAvailable();

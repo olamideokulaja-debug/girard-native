@@ -8,7 +8,11 @@ import { supabase } from "../lib/supabase";
 import { colors } from "../theme";
 
 const SITE = "https://girardpropertylimited.com";
-const money = (n) => "\u20a6" + Number(n || 0).toLocaleString();
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MONF = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const money = (n) => "\u20a6" + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+const fmtShort = (d) => { const x = new Date(d); return x.getDate() + " " + MON[x.getMonth()]; };
+const fmtMonth = (d) => MONF[d.getMonth()] + " " + d.getFullYear();
 const dOnly = (d) => d.toISOString().slice(0, 10);
 const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 const addMonths = (d, n) => { const x = new Date(d); x.setMonth(x.getMonth() + n); return x; };
@@ -70,7 +74,7 @@ export default function ShortLetBooking({ p }) {
     }
     return (
       <View style={{ marginBottom: 14 }}>
-        <Text style={styles.monthLabel}>{m.toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</Text>
+        <Text style={styles.monthLabel}>{fmtMonth(m)}</Text>
         <View style={styles.dow}>{DOW.map((x, i) => <Text key={i} style={styles.dowText}>{x}</Text>)}</View>
         <View style={styles.grid}>{cells}</View>
       </View>
@@ -108,7 +112,7 @@ export default function ShortLetBooking({ p }) {
       <TouchableOpacity onPress={() => setBase(addMonths(base, 1))}><Text style={styles.more}>Show later dates \u203A</Text></TouchableOpacity>
       {ci && co ? (
         <View style={styles.summary}>
-          <Text style={styles.sumLine}>{new Date(ci).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} \u2192 {new Date(co).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}  \u00b7  {nights} night{nights > 1 ? "s" : ""}</Text>
+          <Text style={styles.sumLine}>{fmtShort(ci)} \u2192 {fmtShort(co)}  \u00b7  {nights} night{nights > 1 ? "s" : ""}</Text>
           <Text style={styles.sumTotal}>{money(total)}</Text>
         </View>
       ) : <Text style={styles.hint}>Tap a check-in date, then a check-out date.</Text>}
