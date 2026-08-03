@@ -70,7 +70,7 @@ export default function MyListingsScreen({ navigation }) {
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.back}>{"\u2039  Back"}</Text></TouchableOpacity>
         <Text style={styles.hTitle}>{isAdmin ? "Listings" : "My listings"}</Text>
-        <View style={{ width: 60 }} />
+        <TouchableOpacity onPress={() => navigation.navigate("AddProperty")}><Text style={styles.add}>+ Add</Text></TouchableOpacity>
       </View>
 
       {loading ? (
@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 18, paddingBottom: 14, backgroundColor: colors.ink },
   back: { color: "#C7D3E0", fontSize: 14, fontWeight: "600", width: 60 },
   hTitle: { color: "#fff", fontSize: 17, fontWeight: "800" },
+  add: { color: colors.gold, fontSize: 14, fontWeight: "800", width: 60, textAlign: "right" },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   section: { color: colors.slate, fontSize: 12, fontWeight: "700", letterSpacing: 1, marginTop: 8, marginBottom: 10, marginLeft: 4 },
   card: { flexDirection: "row", backgroundColor: colors.ink, borderRadius: 12, borderWidth: 1, borderColor: "#22405E", padding: 14, marginBottom: 12 },

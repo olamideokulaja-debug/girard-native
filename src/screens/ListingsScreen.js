@@ -129,7 +129,7 @@ export default function ListingsScreen({ navigation }) {
           <Image source={require("../../assets/logo.png")} style={styles.headerLogo} resizeMode="contain" />
           <Text style={styles.brandSub}>Browse verified property</Text>
         </View>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Account" onPress={() => navigation.navigate("Profile")}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Account" onPress={() => navigation.navigate("Account")}>
           <Text style={styles.signout}>Account</Text>
         </TouchableOpacity>
       </View>

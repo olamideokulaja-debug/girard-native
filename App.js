@@ -1,12 +1,14 @@
 // Girard — native app root.
-// Decides what to show based on whether the user is logged in:
-//   not logged in  -> Sign In / Sign Up (native screens)
-//   logged in      -> Home (placeholder for now; real screens come next)
+//   not logged in -> Sign In / Sign Up
+//   logged in     -> bottom tabs (Home / Browse / Messages / Account),
+//                    with Property detail + My listings stacked over them.
 import "react-native-url-polyfill/auto";
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, AppState } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,17 +16,42 @@ import { supabase } from "./src/lib/supabase";
 import { colors } from "./src/theme";
 import SignInScreen from "./src/screens/SignInScreen";
 import SignUpScreen from "./src/screens/SignUpScreen";
+import DashboardScreen from "./src/screens/DashboardScreen";
 import ListingsScreen from "./src/screens/ListingsScreen";
 import PropertyDetailScreen from "./src/screens/PropertyDetailScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import MyListingsScreen from "./src/screens/MyListingsScreen";
+import AddPropertyScreen from "./src/screens/AddPropertyScreen";
 import LockScreen from "./src/screens/LockScreen";
 import MessagesScreen from "./src/screens/MessagesScreen";
 import { isBioEnabled } from "./src/lib/lock";
 import { registerForPush } from "./src/lib/push";
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const TAB_ICONS = { Home: "home", Browse: "search", Messages: "chatbubble-ellipses", Account: "person" };
+
+function Tabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: { backgroundColor: colors.ink, borderTopColor: "#22405E", borderTopWidth: 1, height: 62, paddingBottom: 8, paddingTop: 6 },
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: colors.slate,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+        tabBarIcon: ({ color, size }) => <Ionicons name={TAB_ICONS[route.name] || "ellipse"} size={size} color={color} />,
+      })}
+    >
+      <Tab.Screen name="Home" component={DashboardScreen} />
+      <Tab.Screen name="Browse" component={ListingsScreen} />
+      <Tab.Screen name="Messages" component={MessagesScreen} />
+      <Tab.Screen name="Account" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -79,7 +106,13 @@ export default function App() {
 
   const linking = {
     prefixes: ["girard://", "https://girardpropertylimited.com"],
-    config: { screens: { Listings: "", PropertyDetail: "property/:id", Profile: "account", MyListings: "my-listings", Messages: "messages" } },
+    config: {
+      screens: {
+        Tabs: { screens: { Home: "", Browse: "browse", Messages: "messages", Account: "account" } },
+        PropertyDetail: "property/:id",
+        MyListings: "my-listings",
+      },
+    },
   };
 
   return (
@@ -89,11 +122,10 @@ export default function App() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {session ? (
             <>
-              <Stack.Screen name="Listings" component={ListingsScreen} />
+              <Stack.Screen name="Tabs" component={Tabs} />
               <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
-              <Stack.Screen name="Profile" component={ProfileScreen} />
               <Stack.Screen name="MyListings" component={MyListingsScreen} />
-              <Stack.Screen name="Messages" component={MessagesScreen} />
+              <Stack.Screen name="AddProperty" component={AddPropertyScreen} />
             </>
           ) : (
             <>

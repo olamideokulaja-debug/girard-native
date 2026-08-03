@@ -1,7 +1,7 @@
 // Property detail — full listing page. Opened by tapping a card in the feed.
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Alert, Share,
+  View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Alert, Share, Modal, TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
@@ -11,6 +11,13 @@ import ShortLetBooking from "../components/ShortLetBooking";
 
 const { width } = Dimensions.get("window");
 const money = (n) => "\u20a6" + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+function thumb(url, w) {
+  if (typeof url === "string" && url.indexOf("/storage/v1/object/public/") !== -1) {
+    return url.replace("/object/public/", "/render/image/public/") + (url.indexOf("?") !== -1 ? "&" : "?") + "width=" + w + "&quality=75";
+  }
+  return url;
+}
 
 function photoList(p) {
   const out = [];
@@ -29,6 +36,30 @@ export default function PropertyDetailScreen({ route, navigation }) {
   const [status, setStatus] = useState(initial.status);
   const [paying, setPaying] = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
+  const [enqOpen, setEnqOpen] = useState(false);
+  const [enqPhone, setEnqPhone] = useState("");
+  const [enqMsg, setEnqMsg] = useState("");
+  const [enqSending, setEnqSending] = useState(false);
+
+  const sendEnquiry = async () => {
+    if (!enqMsg.trim()) { Alert.alert("Add a message", "Tell us what you'd like to know."); return; }
+    setEnqSending(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const user = u && u.user;
+      const email = (user && user.email) || null;
+      const meta = (user && user.user_metadata) || {};
+      const name = meta.full_name || meta.name || (email ? email.split("@")[0] : "Guest");
+      const { error } = await supabase.from("enquiries").insert([{
+        id: "EN-" + Date.now(), type: "Enquiry", prop_id: p.id, prop_title: p.title || null,
+        area: p.area || null, name, phone: enqPhone || null, email, message: enqMsg.trim(), status: "New",
+      }]);
+      if (error) throw error;
+      setEnqOpen(false); setEnqMsg(""); setEnqPhone("");
+      Alert.alert("Enquiry sent", "Girard will get back to you shortly.");
+    } catch (e) { Alert.alert("Couldn't send", String((e && e.message) || e)); }
+    setEnqSending(false);
+  };
   const routeId = (route.params && route.params.id) || (p && p.id);
   useEffect(() => {
     if ((!p || !p.title) && routeId) {
@@ -173,11 +204,30 @@ export default function PropertyDetailScreen({ route, navigation }) {
 
           {isShortLet ? <ShortLetBooking p={p} /> : null}
 
+          <TouchableOpacity style={styles.enquire} onPress={() => setEnqOpen(true)}>
+            <Text style={styles.enquireText}>Enquire about this property</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={onReport} style={{ marginTop: 22, alignSelf: "flex-start" }}>
             <Text style={{ color: colors.slate, fontSize: 13, textDecorationLine: "underline" }}>Report this listing</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <Modal visible={enqOpen} transparent animationType="slide" onRequestClose={() => setEnqOpen(false)}>
+        <View style={styles.mOverlay}>
+          <View style={styles.mCard}>
+            <Text style={styles.mTitle}>Enquire</Text>
+            <Text style={styles.mSub} numberOfLines={1}>{p.title || "This property"}</Text>
+            <TextInput style={styles.mInput} value={enqPhone} onChangeText={setEnqPhone} placeholder="Your phone (optional)" placeholderTextColor={colors.slate} keyboardType="phone-pad" />
+            <TextInput style={[styles.mInput, { height: 96, textAlignVertical: "top" }]} value={enqMsg} onChangeText={setEnqMsg} placeholder="Your message" placeholderTextColor={colors.slate} multiline />
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 6 }}>
+              <TouchableOpacity style={[styles.mBtn, styles.mCancel]} onPress={() => setEnqOpen(false)}><Text style={styles.mCancelText}>Cancel</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.mBtn, styles.mSend]} onPress={sendEnquiry} disabled={enqSending}><Text style={styles.mSendText}>{enqSending ? "Sending\u2026" : "Send"}</Text></TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {!isShortLet && <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={status !== "Available" ? "Property leased" : (p.rent ? "Pay " + money(p.rent) + " per year" : "Pay or book")} style={[styles.payBtn, status !== "Available" && { backgroundColor: "#3A5470" }]} onPress={onPayBook} disabled={paying || status !== "Available"}>
@@ -194,6 +244,18 @@ const styles = StyleSheet.create({
   phText: { color: colors.gold, fontSize: 26, fontWeight: "800", letterSpacing: 4, opacity: 0.5 },
   back: { position: "absolute", left: 14, backgroundColor: "rgba(15,36,56,0.7)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   share: { position: "absolute", right: 14, backgroundColor: "rgba(15,36,56,0.7)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  enquire: { marginTop: 18, borderWidth: 1, borderColor: colors.gold, borderRadius: 12, paddingVertical: 13, alignItems: "center" },
+  enquireText: { color: colors.gold, fontSize: 15, fontWeight: "800" },
+  mOverlay: { flex: 1, backgroundColor: "rgba(6,14,24,0.6)", justifyContent: "flex-end" },
+  mCard: { backgroundColor: colors.deep, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 20, borderTopWidth: 1, borderColor: "#22405E" },
+  mTitle: { color: "#fff", fontSize: 18, fontWeight: "800" },
+  mSub: { color: colors.slate, fontSize: 13.5, marginTop: 2, marginBottom: 14 },
+  mInput: { backgroundColor: colors.ink, color: "#fff", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, fontSize: 15, borderWidth: 1, borderColor: "#22405E", marginBottom: 10 },
+  mBtn: { flex: 1, borderRadius: 10, paddingVertical: 13, alignItems: "center" },
+  mCancel: { backgroundColor: colors.ink, borderWidth: 1, borderColor: "#22405E" },
+  mCancelText: { color: "#C7D3E0", fontWeight: "700" },
+  mSend: { backgroundColor: colors.gold },
+  mSendText: { color: colors.deep, fontWeight: "800" },
   counter: { position: "absolute", bottom: 12, right: 12, backgroundColor: "rgba(15,36,56,0.75)", borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4 },
   counterText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   backText: { color: "#fff", fontSize: 14, fontWeight: "700" },

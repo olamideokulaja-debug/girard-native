@@ -59,9 +59,7 @@ export default function MessagesScreen({ navigation }) {
   return (
     <View style={styles.wrap}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.back}>{"\u2039  Back"}</Text></TouchableOpacity>
         <Text style={styles.hTitle}>Messages</Text>
-        <View style={{ width: 60 }} />
       </View>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined} keyboardVerticalOffset={80}>
         <FlatList ref={listRef} data={msgs} keyExtractor={(m, i) => m.id || String(i)}
@@ -80,7 +78,7 @@ export default function MessagesScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.deep },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 18, paddingBottom: 14, backgroundColor: colors.ink },
+  header: { alignItems: "center", paddingHorizontal: 18, paddingBottom: 14, backgroundColor: colors.ink },
   back: { color: "#C7D3E0", fontSize: 14, fontWeight: "600", width: 60 },
   hTitle: { color: "#fff", fontSize: 17, fontWeight: "800" },
   row: { flexDirection: "row", marginBottom: 10 },

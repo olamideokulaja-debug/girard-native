@@ -50,7 +50,13 @@
           "faceIDPermission": "Allow Girard to unlock with Face ID."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Girard to add photos to your listing."
+        }
+      ]
     ]
   }
 }
