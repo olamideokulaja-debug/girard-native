@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme";
 
 const ADMIN_DOMAIN = "girardpropertylimited.com";
@@ -54,7 +55,7 @@ export default function EnquiriesScreen({ navigation }) {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 30 }}>
           {rows.length === 0 ? (
-            <Text style={styles.empty}>No enquiries yet. When someone enquires about a listing, it will appear here.</Text>
+            <View style={styles.emptyBox}><Ionicons name="mail-outline" size={46} color={colors.slate} /><Text style={styles.emptyTitle}>No enquiries yet</Text><Text style={styles.empty}>When someone enquires about a listing, it appears here.</Text></View>
           ) : rows.map(e => (
             <View key={e.id} style={styles.card}>
               <View style={styles.rowTop}>
@@ -82,7 +83,9 @@ const styles = StyleSheet.create({
   back: { color: "#C7D3E0", fontSize: 14, fontWeight: "600", width: 60 },
   hTitle: { color: "#fff", fontSize: 17, fontWeight: "800" },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  empty: { color: colors.slate, fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 50, paddingHorizontal: 20 },
+  emptyBox: { alignItems: "center", marginTop: 40, paddingHorizontal: 20 },
+  emptyTitle: { color: "#fff", fontSize: 17, fontWeight: "700", marginTop: 14, marginBottom: 6 },
+  empty: { color: colors.slate, fontSize: 14, lineHeight: 21, textAlign: "center" },
   card: { backgroundColor: colors.ink, borderRadius: 12, borderWidth: 1, borderColor: "#22405E", padding: 14, marginBottom: 12 },
   rowTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   prop: { color: "#fff", fontSize: 15, fontWeight: "700", flex: 1, marginRight: 8 },

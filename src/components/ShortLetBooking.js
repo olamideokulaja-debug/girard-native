@@ -109,7 +109,7 @@ export default function ShortLetBooking({ p }) {
       <Text style={styles.nightly}>{money(nightly)} <Text style={styles.per}>/ night</Text>{minNights > 1 ? "  \u00b7  min " + minNights + " nights" : ""}</Text>
       <Month m={base} />
       <Month m={addMonths(base, 1)} />
-      <TouchableOpacity onPress={() => setBase(addMonths(base, 1))}><Text style={styles.more}>Show later dates \u203A</Text></TouchableOpacity>
+      <TouchableOpacity onPress={() => setBase(addMonths(base, 1))}><Text style={styles.more}>Show later dates ›</Text></TouchableOpacity>
       {ci && co ? (
         <View style={styles.summary}>
           <Text style={styles.sumLine}>{fmtShort(ci)} \u2192 {fmtShort(co)}  \u00b7  {nights} night{nights > 1 ? "s" : ""}</Text>

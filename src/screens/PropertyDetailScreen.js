@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import { supabase } from "../lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme";
 import ShortLetBooking from "../components/ShortLetBooking";
 
@@ -167,8 +168,8 @@ export default function PropertyDetailScreen({ route, navigation }) {
           </View>
         )}
 
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" style={[styles.back, { top: insets.top + 10 }]} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹  Back</Text>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" style={[styles.iconBtn, { top: insets.top + 10, left: 14 }]} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
 
         <View style={styles.body}>
@@ -179,7 +180,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
           <Text style={styles.meta}>
             {[p.area, p.type, p.beds ? p.beds + " bed" : null].filter(Boolean).join("  ·  ")}
           </Text>
-          {p.address ? <Text style={styles.address}>{p.address}</Text> : null}
+          {p.address ? <View style={styles.addrRow}><Ionicons name="location-outline" size={15} color={colors.slate} /><Text style={styles.address}>{p.address}</Text></View> : null}
 
           <Text style={styles.rent}>{p.rent ? money(p.rent) + " / yr" : "Price on request"}</Text>
           {(p.letType || p.term) ? (
@@ -205,6 +206,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
           {isShortLet ? <ShortLetBooking p={p} /> : null}
 
           <TouchableOpacity style={styles.enquire} onPress={() => setEnqOpen(true)}>
+            <Ionicons name="chatbubble-ellipses-outline" size={17} color={colors.gold} style={{ marginRight: 8 }} />
             <Text style={styles.enquireText}>Enquire about this property</Text>
           </TouchableOpacity>
 
@@ -242,9 +244,12 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.deep },
   photoPh: { backgroundColor: "#12293F", alignItems: "center", justifyContent: "center" },
   phText: { color: colors.gold, fontSize: 26, fontWeight: "800", letterSpacing: 4, opacity: 0.5 },
-  back: { position: "absolute", left: 14, backgroundColor: "rgba(15,36,56,0.7)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
-  share: { position: "absolute", right: 14, backgroundColor: "rgba(15,36,56,0.7)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
-  enquire: { marginTop: 18, borderWidth: 1, borderColor: colors.gold, borderRadius: 12, paddingVertical: 13, alignItems: "center" },
+  iconBtn: { position: "absolute", width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(15,36,56,0.72)", alignItems: "center", justifyContent: "center" },
+  addrRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6 },
+  metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 14, marginTop: 8 },
+  metaChip: { flexDirection: "row", alignItems: "center", gap: 4 },
+  metaText: { color: colors.slate, fontSize: 13.5 },
+  enquire: { marginTop: 18, borderWidth: 1, borderColor: colors.gold, borderRadius: 12, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center" },
   enquireText: { color: colors.gold, fontSize: 15, fontWeight: "800" },
   mOverlay: { flex: 1, backgroundColor: "rgba(6,14,24,0.6)", justifyContent: "flex-end" },
   mCard: { backgroundColor: colors.deep, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 20, borderTopWidth: 1, borderColor: "#22405E" },

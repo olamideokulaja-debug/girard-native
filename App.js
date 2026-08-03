@@ -9,7 +9,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "./src/lib/supabase";
@@ -25,6 +25,7 @@ import MyListingsScreen from "./src/screens/MyListingsScreen";
 import AddPropertyScreen from "./src/screens/AddPropertyScreen";
 import EnquiriesScreen from "./src/screens/EnquiriesScreen";
 import EarningsScreen from "./src/screens/EarningsScreen";
+import SwapScreen from "./src/screens/SwapScreen";
 import LockScreen from "./src/screens/LockScreen";
 import MessagesScreen from "./src/screens/MessagesScreen";
 import { isBioEnabled } from "./src/lib/lock";
@@ -36,11 +37,12 @@ const Tab = createBottomTabNavigator();
 const TAB_ICONS = { Home: "home", Browse: "search", Messages: "chatbubble-ellipses", Account: "person" };
 
 function Tabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: colors.ink, borderTopColor: "#22405E", borderTopWidth: 1, height: 62, paddingBottom: 8, paddingTop: 6 },
+        tabBarStyle: { backgroundColor: colors.ink, borderTopColor: "#22405E", borderTopWidth: 1, height: 60 + insets.bottom, paddingBottom: 8 + insets.bottom, paddingTop: 8 },
         tabBarActiveTintColor: colors.gold,
         tabBarInactiveTintColor: colors.slate,
         tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
@@ -130,6 +132,7 @@ export default function App() {
               <Stack.Screen name="AddProperty" component={AddPropertyScreen} />
               <Stack.Screen name="Enquiries" component={EnquiriesScreen} />
               <Stack.Screen name="Earnings" component={EarningsScreen} />
+              <Stack.Screen name="Swap" component={SwapScreen} />
             </>
           ) : (
             <>

@@ -128,7 +128,7 @@ export default function AddPropertyScreen({ navigation }) {
         <Field label="Area" value={area} onChangeText={setArea} placeholder="e.g. Lekki Phase 1" />
         {isShortLet ? (
           <View style={{ flexDirection: "row", gap: 12 }}>
-            <View style={{ flex: 1 }}><Field label="Price / night (\u20a6)" value={nightly} onChangeText={t => setNightly(t.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder="85000" /></View>
+            <View style={{ flex: 1 }}><Field label="Price / night (₦)" value={nightly} onChangeText={t => setNightly(t.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder="85000" /></View>
             <View style={{ flex: 1 }}><Field label="Min nights" value={minNights} onChangeText={t => setMinNights(t.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder="2" /></View>
           </View>
         ) : (

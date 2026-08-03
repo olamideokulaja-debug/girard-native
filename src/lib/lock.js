@@ -8,6 +8,13 @@ export async function bioAvailable() {
   catch (e) { return false; }
 }
 export async function authenticate() {
-  try { const r = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock Girard", fallbackLabel: "Use passcode" }); return !!(r && r.success); }
-  catch (e) { return false; }
+  try {
+    const r = await LocalAuthentication.authenticateAsync({
+      promptMessage: "Unlock Girard",
+      fallbackLabel: "Use device passcode",
+      disableDeviceFallback: false,
+      cancelLabel: "Cancel",
+    });
+    return r || { success: false };
+  } catch (e) { return { success: false, error: String((e && e.message) || e) }; }
 }

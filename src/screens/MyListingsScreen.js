@@ -5,6 +5,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme";
 
 const money = (n) => "\u20a6" + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -86,7 +87,7 @@ export default function MyListingsScreen({ navigation }) {
 
           <Text style={styles.section}>{isAdmin ? "MY OWN LISTINGS" : "YOUR LISTINGS"}</Text>
           {mine.length === 0 ? (
-            <Text style={styles.empty}>You haven't listed any properties yet. Add one on girardpropertylimited.com and it will appear here.</Text>
+            <View style={styles.emptyBox}><Ionicons name="business-outline" size={46} color={colors.slate} /><Text style={styles.emptyTitle}>No listings yet</Text><Text style={styles.empty}>Tap + Add to list your first property.</Text></View>
           ) : mine.map(p => <Card key={p.id} p={p} />)}
         </ScrollView>
       )}
@@ -112,5 +113,7 @@ const styles = StyleSheet.create({
   bPend: { backgroundColor: "#7A5C00", color: "#fff" },
   approve: { marginTop: 10, backgroundColor: colors.teal, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   approveText: { color: "#fff", fontWeight: "800", fontSize: 12.5 },
-  empty: { color: colors.slate, fontSize: 13.5, lineHeight: 20, padding: 4 },
+  emptyBox: { alignItems: "center", marginTop: 40, paddingHorizontal: 20 },
+  emptyTitle: { color: "#fff", fontSize: 17, fontWeight: "700", marginTop: 14, marginBottom: 6 },
+  empty: { color: colors.slate, fontSize: 13.5, lineHeight: 20, textAlign: "center" },
 });

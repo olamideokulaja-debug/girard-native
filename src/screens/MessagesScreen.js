@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme";
 
 export default function MessagesScreen({ navigation }) {
@@ -66,9 +67,9 @@ export default function MessagesScreen({ navigation }) {
           renderItem={({ item }) => <Bubble m={item} />}
           contentContainerStyle={{ padding: 14, paddingBottom: 20 }}
           onContentSizeChange={() => { if (listRef.current && msgs.length) listRef.current.scrollToEnd({ animated: true }); }}
-          ListEmptyComponent={<Text style={styles.empty}>Start a conversation with the Girard team. We usually reply within a day.</Text>} />
+          ListEmptyComponent={<View style={styles.emptyBox}><Ionicons name="chatbubbles-outline" size={46} color={colors.slate} /><Text style={styles.emptyTitle}>Say hello</Text><Text style={styles.empty}>Start a conversation with the Girard team. We usually reply within a day.</Text></View>} />
         <View style={[styles.inputBar, { paddingBottom: insets.bottom + 8 }]}>
-          <TextInput style={styles.input} value={text} onChangeText={setText} placeholder="Message Girard\u2026" placeholderTextColor={colors.slate} multiline />
+          <TextInput style={styles.input} value={text} onChangeText={setText} placeholder="Message Girard…" placeholderTextColor={colors.slate} multiline />
           <TouchableOpacity style={styles.sendBtn} onPress={send}><Text style={styles.sendText}>Send</Text></TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -87,7 +88,9 @@ const styles = StyleSheet.create({
   theirs: { backgroundColor: colors.ink, borderWidth: 1, borderColor: "#22405E", borderBottomLeftRadius: 4 },
   who: { color: colors.gold, fontSize: 11, fontWeight: "800", marginBottom: 3 },
   body: { color: "#E7EEF5", fontSize: 14.5, lineHeight: 20 },
-  empty: { color: colors.slate, fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 60, paddingHorizontal: 30 },
+  emptyBox: { alignItems: "center", marginTop: 70, paddingHorizontal: 30 },
+  emptyTitle: { color: "#fff", fontSize: 17, fontWeight: "700", marginTop: 14, marginBottom: 6 },
+  empty: { color: colors.slate, fontSize: 14, lineHeight: 21, textAlign: "center" },
   inputBar: { flexDirection: "row", alignItems: "flex-end", padding: 10, backgroundColor: colors.ink, borderTopWidth: 1, borderTopColor: "#22405E" },
   input: { flex: 1, color: "#fff", backgroundColor: colors.deep, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 110, borderWidth: 1, borderColor: "#22405E", fontSize: 14.5 },
   sendBtn: { backgroundColor: colors.gold, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 11, marginLeft: 8 },

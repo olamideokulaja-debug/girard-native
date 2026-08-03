@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking, Switch, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme";
 import { isBioEnabled, setBioEnabled, bioAvailable } from "../lib/lock";
 
@@ -43,19 +44,20 @@ export default function ProfileScreen({ navigation }) {
       <Text style={styles.rowValue} numberOfLines={1}>{value || "\u2014"}</Text>
     </View>
   );
-  const Link = ({ label, onPress }) => (
+  const Link = ({ label, icon, onPress }) => (
     <TouchableOpacity style={styles.linkRow} onPress={onPress}>
-      <Text style={styles.linkText}>{label}</Text>
-      <Text style={styles.chev}>{"\u203A"}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+        {icon ? <Ionicons name={icon} size={18} color={colors.gold} style={{ marginRight: 12 }} /> : null}
+        <Text style={styles.linkText}>{label}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={colors.slate} />
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={styles.back}>{"\u2039  Back"}</Text></TouchableOpacity>
+      <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <Text style={styles.hTitle}>Account</Text>
-        <View style={{ width: 60 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 40 }}>
@@ -94,10 +96,7 @@ export default function ProfileScreen({ navigation }) {
 
         <Text style={styles.section}>LANDLORD</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate("MyListings")}>
-            <Text style={styles.linkText}>My listings & verification</Text>
-            <Text style={styles.chev}>{"\u203A"}</Text>
-          </TouchableOpacity>
+          <Link label="My listings & verification" icon="business" onPress={() => navigation.navigate("MyListings")} />
         </View>
 
         <Text style={styles.section}>SECURITY</Text>
@@ -110,13 +109,13 @@ export default function ProfileScreen({ navigation }) {
 
         <Text style={styles.section}>SUPPORT</Text>
         <View style={styles.card}>
-          <Link label="Message Girard" onPress={() => navigation.navigate("Messages")} />
+          <Link label="Message Girard" icon="chatbubble-ellipses" onPress={() => navigation.navigate("Messages")} />
           <View style={styles.divider} />
-          <Link label="Contact support" onPress={() => Linking.openURL("mailto:support@girardpropertylimited.com")} />
+          <Link label="Contact support" icon="mail" onPress={() => Linking.openURL("mailto:support@girardpropertylimited.com")} />
           <View style={styles.divider} />
-          <Link label="Visit girardpropertylimited.com" onPress={() => Linking.openURL("https://girardpropertylimited.com")} />
+          <Link label="Visit girardpropertylimited.com" icon="globe-outline" onPress={() => Linking.openURL("https://girardpropertylimited.com")} />
           <View style={styles.divider} />
-          <Link label="Privacy policy" onPress={() => Linking.openURL("https://girardpropertylimited.com/privacy")} />
+          <Link label="Privacy policy" icon="shield-checkmark-outline" onPress={() => Linking.openURL("https://girardpropertylimited.com/privacy")} />
         </View>
 
         <TouchableOpacity style={styles.signOut} onPress={() => supabase.auth.signOut()}>
@@ -131,9 +130,9 @@ export default function ProfileScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.deep },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 18, paddingBottom: 14, backgroundColor: colors.ink },
+  header: { paddingHorizontal: 18, paddingBottom: 16, backgroundColor: colors.ink },
   back: { color: "#C7D3E0", fontSize: 14, fontWeight: "600", width: 60 },
-  hTitle: { color: "#fff", fontSize: 17, fontWeight: "800" },
+  hTitle: { color: "#fff", fontSize: 25, fontWeight: "800" },
   avatarWrap: { alignItems: "center", marginTop: 8, marginBottom: 22 },
   avatar: { width: 84, height: 84, borderRadius: 999, backgroundColor: colors.ink, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: colors.gold, marginBottom: 12 },
   avatarText: { color: colors.gold, fontSize: 34, fontWeight: "800" },

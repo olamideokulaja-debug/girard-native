@@ -61,7 +61,7 @@ export default function EarningsScreen({ navigation }) {
             ) : (
               <View>
                 <Text style={styles.acctSub}>No payout account set up yet.</Text>
-                <TouchableOpacity onPress={() => Linking.openURL(SITE)}><Text style={styles.link}>Set up your payout account on the website \u203A</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => Linking.openURL(SITE)}><Text style={styles.link}>Set up your payout account on the website ›</Text></TouchableOpacity>
               </View>
             )}
           </View>

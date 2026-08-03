@@ -1,22 +1,52 @@
-// Home / Dashboard — the landing screen. Role-aware: everyone gets quick actions;
-// landlords/admins get listing + verification widgets; investor/swap link out to
-// the website until those are built natively.
+// Home / Dashboard — landing screen with a workspace switcher. The chosen
+// workspace (Tenant / Landlord / Investor / Admin) reshapes the actions shown.
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking, RefreshControl } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl, Modal, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../lib/supabase";
 import { loadFavs } from "../lib/favourites";
 import { colors } from "../theme";
 
 const ADMIN_DOMAIN = "girardpropertylimited.com";
+const WS_KEY = "girard_workspace";
+
+const ACTIONS = {
+  Tenant: [
+    { key: "Browse", label: "Browse property", sub: "Find your next home", icon: "search", go: (n) => n.navigate("Browse") },
+    { key: "Saved", label: "Saved listings", sub: "Your shortlist", icon: "heart", go: (n) => n.navigate("Browse", { showSaved: true }) },
+    { key: "Msg", label: "Message Girard", sub: "Talk to our team", icon: "chatbubble-ellipses", go: (n) => n.navigate("Messages") },
+    { key: "Book", label: "My bookings & payments", sub: "Receipts and history", icon: "receipt", go: (n) => n.navigate("Account") },
+  ],
+  Landlord: [
+    { key: "Mine", label: "My listings", sub: "Manage your properties", icon: "business", go: (n) => n.navigate("MyListings") },
+    { key: "Add", label: "Add a property", sub: "List a new property", icon: "add-circle", go: (n) => n.navigate("AddProperty") },
+    { key: "Enq", label: "Enquiries", sub: "Leads on your listings", icon: "mail", go: (n) => n.navigate("Enquiries") },
+    { key: "Earn", label: "Earnings", sub: "Received + payout account", icon: "cash", go: (n) => n.navigate("Earnings") },
+  ],
+  Investor: [
+    { key: "Deals", label: "Investor deals", sub: "For-sale opportunities", icon: "trending-up", go: (n) => n.navigate("Browse", { initialIntent: "For sale" }) },
+    { key: "Swap", label: "Property swap", sub: "Swap across cities & countries", icon: "swap-horizontal", go: (n) => n.navigate("Swap") },
+    { key: "Saved", label: "Saved", sub: "Your shortlist", icon: "heart", go: (n) => n.navigate("Browse", { showSaved: true }) },
+  ],
+  Admin: [
+    { key: "Verify", label: "Verify listings", sub: "Approve pending", icon: "shield-checkmark", go: (n) => n.navigate("MyListings") },
+    { key: "Enq", label: "Enquiries", sub: "All leads", icon: "mail", go: (n) => n.navigate("Enquiries") },
+    { key: "Add", label: "Add a property", sub: "List a new property", icon: "add-circle", go: (n) => n.navigate("AddProperty") },
+    { key: "Earn", label: "Earnings", sub: "Payments overview", icon: "cash", go: (n) => n.navigate("Earnings") },
+  ],
+};
 
 export default function DashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
-  const [role, setRole] = useState("Tenant");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [stats, setStats] = useState({ mine: 0, pending: 0, payments: 0, saved: 0 });
+  const [ownsListings, setOwnsListings] = useState(false);
+  const [workspace, setWorkspace] = useState("Tenant");
+  const [stats, setStats] = useState({ saved: 0, payments: 0, mine: 0, pending: 0 });
   const [refreshing, setRefreshing] = useState(false);
+  const [wsOpen, setWsOpen] = useState(false);
 
   const load = useCallback(async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -24,7 +54,6 @@ export default function DashboardScreen({ navigation }) {
     const email = (user && user.email) || "";
     const meta = (user && user.user_metadata) || {};
     setName(meta.full_name || meta.name || (email ? email.split("@")[0] : "there"));
-    setRole(meta.role || "Tenant");
     const admin = email.toLowerCase().endsWith("@" + ADMIN_DOMAIN);
     setIsAdmin(admin);
 
@@ -38,77 +67,105 @@ export default function DashboardScreen({ navigation }) {
     } catch (e) {}
     try { const { data: pays } = await supabase.from("payments").select("id"); payments = (pays || []).length; } catch (e) {}
     try { saved = (await loadFavs()).length; } catch (e) {}
-    setStats({ mine, pending, payments, saved });
+    setOwnsListings(mine > 0);
+    setStats({ saved, payments, mine, pending });
+
+    const savedWs = await AsyncStorage.getItem(WS_KEY);
+    setWorkspace(savedWs || (admin ? "Admin" : mine > 0 ? "Landlord" : "Tenant"));
   }, []);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { const un = navigation.addListener("focus", load); return un; }, [navigation, load]);
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
-  const isLandlord = stats.mine > 0 || /land|owner|agent/i.test(role);
-  const isInvestor = /investor/i.test(role);
-
-  const Stat = ({ label, value, onPress }) => (
-    <TouchableOpacity style={styles.stat} onPress={onPress} disabled={!onPress}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-  const Action = ({ label, sub, onPress }) => (
-    <TouchableOpacity style={styles.action} onPress={onPress}>
-      <Text style={styles.actionLabel}>{label}</Text>
-      <Text style={styles.actionSub}>{sub}</Text>
-      <Text style={styles.actionChev}>{"\u203A"}</Text>
-    </TouchableOpacity>
-  );
+  const chooseWs = async (w) => { setWorkspace(w); setWsOpen(false); try { await AsyncStorage.setItem(WS_KEY, w); } catch (e) {} };
+  const available = ["Tenant", "Landlord", "Investor"].concat(isAdmin ? ["Admin"] : []);
+  const actions = ACTIONS[workspace] || ACTIONS.Tenant;
+  const statList = workspace === "Admin"
+    ? [["To verify", stats.pending], ["Payments", stats.payments], ["Listings", stats.mine]]
+    : workspace === "Landlord"
+      ? [["Listings", stats.mine], ["Payments", stats.payments], ["Saved", stats.saved]]
+      : [["Saved", stats.saved], ["Payments", stats.payments], ["Listings", stats.mine]];
 
   return (
     <View style={styles.wrap}>
-      <ScrollView contentContainerStyle={{ padding: 18, paddingTop: insets.top + 18, paddingBottom: insets.bottom + 24 }}
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 14, paddingBottom: 24 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.gold} />}>
-        <Text style={styles.hello}>Hello, {name}</Text>
-        <Text style={styles.sub}>Welcome back to Girard{isAdmin ? "  \u00b7  Admin" : ""}</Text>
-
-        <View style={styles.statsRow}>
-          <Stat label="Saved" value={stats.saved} onPress={() => navigation.navigate("Browse")} />
-          <Stat label="Payments" value={stats.payments} onPress={() => navigation.navigate("Account")} />
-          {isLandlord || isAdmin ? <Stat label={isAdmin ? "To verify" : "My listings"} value={isAdmin ? stats.pending : stats.mine} onPress={() => navigation.navigate("MyListings")} /> : <Stat label="Messages" value={"\u2022"} onPress={() => navigation.navigate("Messages")} />}
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.hello}>Hello, {name}</Text>
+            <Text style={styles.sub}>Welcome back to Girard</Text>
+          </View>
+          <Image source={require("../../assets/logo.png")} style={styles.logo} resizeMode="contain" />
         </View>
 
-        <Text style={styles.section}>QUICK ACTIONS</Text>
-        <Action label="Browse property" sub="Find your next home or investment" onPress={() => navigation.navigate("Browse")} />
-        <Action label="Saved listings" sub="Your shortlist" onPress={() => navigation.navigate("Browse")} />
-        <Action label="Message Girard" sub="Talk to our team" onPress={() => navigation.navigate("Messages")} />
+        <TouchableOpacity style={styles.wsPill} onPress={() => setWsOpen(true)}>
+          <Ionicons name="grid-outline" size={15} color={colors.gold} />
+          <Text style={styles.wsText}>Workspace: <Text style={{ color: "#fff" }}>{workspace}</Text></Text>
+          <Ionicons name="chevron-down" size={16} color={colors.slate} />
+        </TouchableOpacity>
 
-        {(isLandlord || isAdmin) ? (
-          <View>
-            <Text style={styles.section}>{isAdmin ? "ADMIN" : "LANDLORD"}</Text>
-            <Action label={isAdmin ? "Verify listings" : "My listings"} sub={isAdmin ? (stats.pending + " pending verification") : (stats.mine + " listed")} onPress={() => navigation.navigate("MyListings")} />
-            <Action label="Add a property" sub="List a new property" onPress={() => navigation.navigate("AddProperty")} />
-            <Action label="Enquiries" sub="Leads on your listings" onPress={() => navigation.navigate("Enquiries")} />
-            <Action label="Earnings" sub="What you\u2019ve received + payout account" onPress={() => navigation.navigate("Earnings")} />
-          </View>
-        ) : null}
+        <View style={styles.statsRow}>
+          {statList.map(([label, value]) => (
+            <View key={label} style={styles.stat}>
+              <Text style={styles.statValue}>{value}</Text>
+              <Text style={styles.statLabel}>{label}</Text>
+            </View>
+          ))}
+        </View>
 
-        <Text style={styles.section}>MORE ON GIRARD</Text>
-        <Action label="Investor deals" sub="For-sale opportunities" onPress={() => navigation.navigate("Browse", { initialIntent: "For sale" })} />
-        <Action label="Property swap" sub="Available on the website" onPress={() => Linking.openURL("https://girardpropertylimited.com")} />
+        <Text style={styles.section}>{workspace.toUpperCase()} TOOLS</Text>
+        <View style={{ paddingHorizontal: 16 }}>
+          {actions.map(a => (
+            <TouchableOpacity key={a.key} style={styles.action} onPress={() => a.go(navigation)}>
+              <View style={styles.actionIcon}><Ionicons name={a.icon} size={20} color={colors.gold} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.actionLabel}>{a.label}</Text>
+                <Text style={styles.actionSub}>{a.sub}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.slate} />
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
+
+      <Modal visible={wsOpen} transparent animationType="slide" onRequestClose={() => setWsOpen(false)}>
+        <TouchableOpacity style={styles.mOverlay} activeOpacity={1} onPress={() => setWsOpen(false)}>
+          <View style={[styles.mSheet, { paddingBottom: insets.bottom + 16 }]}>
+            <Text style={styles.mTitle}>Switch workspace</Text>
+            {available.map(w => (
+              <TouchableOpacity key={w} style={styles.wsRow} onPress={() => chooseWs(w)}>
+                <Text style={[styles.wsRowText, workspace === w && { color: colors.gold, fontWeight: "800" }]}>{w}</Text>
+                {workspace === w ? <Ionicons name="checkmark" size={20} color={colors.gold} /> : null}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.deep },
-  hello: { color: "#fff", fontSize: 26, fontWeight: "800" },
-  sub: { color: colors.slate, fontSize: 14, marginTop: 4, marginBottom: 18 },
-  statsRow: { flexDirection: "row", gap: 10, marginBottom: 6 },
+  headerRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 18, marginBottom: 14 },
+  hello: { color: "#fff", fontSize: 25, fontWeight: "800" },
+  sub: { color: colors.slate, fontSize: 14, marginTop: 3 },
+  logo: { width: 46, height: 46 },
+  wsPill: { flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "flex-start", marginHorizontal: 18, backgroundColor: colors.ink, borderWidth: 1, borderColor: "#22405E", borderRadius: 22, paddingHorizontal: 14, paddingVertical: 9, marginBottom: 18 },
+  wsText: { color: colors.slate, fontSize: 13.5, fontWeight: "700" },
+  statsRow: { flexDirection: "row", gap: 10, paddingHorizontal: 16, marginBottom: 8 },
   stat: { flex: 1, backgroundColor: colors.ink, borderRadius: 14, borderWidth: 1, borderColor: "#22405E", paddingVertical: 16, alignItems: "center" },
   statValue: { color: colors.gold, fontSize: 24, fontWeight: "800" },
   statLabel: { color: colors.slate, fontSize: 12, marginTop: 4 },
-  section: { color: colors.slate, fontSize: 12, fontWeight: "700", letterSpacing: 1, marginTop: 24, marginBottom: 10, marginLeft: 2 },
-  action: { backgroundColor: colors.ink, borderRadius: 14, borderWidth: 1, borderColor: "#22405E", padding: 16, marginBottom: 10 },
+  section: { color: colors.slate, fontSize: 12, fontWeight: "700", letterSpacing: 1, marginTop: 22, marginBottom: 12, marginLeft: 18 },
+  action: { flexDirection: "row", alignItems: "center", backgroundColor: colors.ink, borderRadius: 14, borderWidth: 1, borderColor: "#22405E", padding: 14, marginBottom: 11 },
+  actionIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(201,162,75,0.12)", alignItems: "center", justifyContent: "center", marginRight: 14 },
   actionLabel: { color: "#fff", fontSize: 15.5, fontWeight: "700" },
   actionSub: { color: colors.slate, fontSize: 13, marginTop: 3 },
-  actionChev: { position: "absolute", right: 16, top: 18, color: colors.slate, fontSize: 22 },
+  mOverlay: { flex: 1, backgroundColor: "rgba(6,14,24,0.6)", justifyContent: "flex-end" },
+  mSheet: { backgroundColor: colors.deep, borderTopLeftRadius: 18, borderTopRightRadius: 18, padding: 20, borderTopWidth: 1, borderColor: "#22405E" },
+  mTitle: { color: "#fff", fontSize: 17, fontWeight: "800", marginBottom: 10 },
+  wsRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "#1B3550" },
+  wsRowText: { color: "#E7EEF5", fontSize: 16 },
 });
