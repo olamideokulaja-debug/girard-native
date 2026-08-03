@@ -1,23 +1,26 @@
-# App: turn on the REAL Pay / Book (replaces "Coming soon")
+# Girard native — EVERYTHING in one build
 
-This is the APP side. The "Coming soon" message is baked into the app, so it only
-changes after you upload these and BUILD a new app.
+This is the whole app with all the latest changes:
+  - padded app icon (fixes the cropped home-screen icon)
+  - emblem logo in the listings header (instead of "GIRARD" text)
+  - tappable listings -> Property Detail page (photos, amenities, description, Pay/Book)
+  - deep navy colour, gold wordmark on sign-in, OTA enabled
 
-Files:
-  package.json                          <- adds expo-web-browser
-  src/screens/PropertyDetailScreen.js   <- real Paystack Pay/Book flow
+## Step 1 — upload EVERYTHING (replace what's there)
+1. GitHub -> girard-native repo -> Add file -> Upload files.
+2. Drag in ALL of these from this folder:
+     App.js, app.json, package.json, index.js, eas.json, .gitignore,
+     and the folders: src, assets, .eas
+   (.eas is hidden — press Cmd+Shift+. in Finder to show it, or it's already there.)
+3. Commit changes.
 
-## Step 1 — upload to the APP repo (girard-native)
-GitHub -> girard-native repo -> Add file -> Upload files ->
-drag in package.json AND the src folder -> Commit.
+## Step 2 — ONE build
+Builds -> Build from GitHub -> Git ref: main -> Profile: preview -> Platform: Android -> Confirm.
 
-## Step 2 — BUILD (required; new native module can't go over-the-air)
-Builds -> Build from GitHub -> main -> preview -> Android -> Confirm.
+## Step 3 — install
+When it's green, open the APK link on your phone and install (allow "install from this source").
+Now you'll see: the fixed icon, the emblem header, and tapping a listing opens its full page.
 
-## Step 3 — install the new APK on your phone
-Open the green build's link on your phone, install, open the app.
-Now the property page shows a real "Pay ... / yr" button instead of "Coming soon".
-
-## Before testing a payment
-Make sure PAYSTACK_SECRET_KEY in Vercel is set to your sk_test_... key first,
-so test payments move no real money.
+## Note on the test listing
+A test property is currently in your database so the feed isn't empty.
+Ask Claude to delete it whenever you're done.

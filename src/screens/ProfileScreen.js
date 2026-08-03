@@ -1,17 +1,34 @@
 // Account / Profile — native screen showing the signed-in user's details.
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Linking, Switch, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { colors } from "../theme";
+import { isBioEnabled, setBioEnabled, bioAvailable } from "../lib/lock";
 
 export default function ProfileScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [user, setUser] = useState(null);
+  const [payments, setPayments] = useState([]);
+  const [bioOn, setBioOn] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser((data && data.user) || null));
+    isBioEnabled().then(setBioOn);
+    supabase.from("payments").select("*").order("paid_at", { ascending: false }).limit(20)
+      .then(({ data }) => setPayments(data || []))
+      .catch(() => setPayments([]));
   }, []);
+
+  const money = (kobo) => "\u20a6" + Number((kobo || 0) / 100).toLocaleString();
+  const dateStr = (iso) => { try { return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return ""; } };
+  const onToggleBio = async (val) => {
+    if (val) {
+      const ok = await bioAvailable();
+      if (!ok) { Alert.alert("Not available", "Set up Face ID or a fingerprint on your device first."); return; }
+    }
+    await setBioEnabled(val); setBioOn(val);
+  };
 
   const meta = (user && user.user_metadata) || {};
   const name = meta.full_name || meta.name || "";
@@ -56,8 +73,44 @@ export default function ProfileScreen({ navigation }) {
           <Row label="Role" value={role} />
         </View>
 
+        <Text style={styles.section}>MY PAYMENTS</Text>
+        <View style={styles.card}>
+          {payments.length === 0 ? (
+            <Text style={styles.emptyPay}>No payments yet. Rent you pay through the app will appear here.</Text>
+          ) : payments.map((pmt, i) => (
+            <View key={pmt.id || pmt.reference || i}>
+              {i > 0 ? <View style={styles.divider} /> : null}
+              <View style={styles.payRow}>
+                <View style={{ flex: 1, marginRight: 10 }}>
+                  <Text style={styles.payTitle} numberOfLines={1}>{pmt.title || pmt.property_id || "Payment"}</Text>
+                  <Text style={styles.paySub}>{dateStr(pmt.paid_at)}{pmt.status ? "  \u00b7  " + pmt.status : ""}</Text>
+                </View>
+                <Text style={styles.payAmount}>{money(pmt.amount)}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <Text style={styles.section}>LANDLORD</Text>
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.linkRow} onPress={() => navigation.navigate("MyListings")}>
+            <Text style={styles.linkText}>My listings & verification</Text>
+            <Text style={styles.chev}>{"\u203A"}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.section}>SECURITY</Text>
+        <View style={styles.card}>
+          <View style={styles.linkRow}>
+            <Text style={styles.linkText}>Require Face ID / fingerprint</Text>
+            <Switch value={bioOn} onValueChange={onToggleBio} trackColor={{ true: colors.teal, false: "#33546F" }} thumbColor="#fff" />
+          </View>
+        </View>
+
         <Text style={styles.section}>SUPPORT</Text>
         <View style={styles.card}>
+          <Link label="Message Girard" onPress={() => navigation.navigate("Messages")} />
+          <View style={styles.divider} />
           <Link label="Contact support" onPress={() => Linking.openURL("mailto:support@girardpropertylimited.com")} />
           <View style={styles.divider} />
           <Link label="Visit girardpropertylimited.com" onPress={() => Linking.openURL("https://girardpropertylimited.com")} />
@@ -96,5 +149,10 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: "#22405E", marginHorizontal: 16 },
   signOut: { backgroundColor: colors.ink, borderRadius: 12, paddingVertical: 15, alignItems: "center", borderWidth: 1, borderColor: colors.danger },
   signOutText: { color: colors.danger, fontSize: 15, fontWeight: "700" },
+  emptyPay: { color: colors.slate, fontSize: 13.5, lineHeight: 20, padding: 16 },
+  payRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingVertical: 13 },
+  payTitle: { color: "#fff", fontSize: 14.5, fontWeight: "600" },
+  paySub: { color: colors.slate, fontSize: 12, marginTop: 3 },
+  payAmount: { color: colors.teal, fontSize: 15, fontWeight: "800" },
   version: { textAlign: "center", color: colors.slate, fontSize: 12, marginTop: 22 },
 });

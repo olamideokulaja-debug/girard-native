@@ -1,12 +1,13 @@
 // Property detail — full listing page. Opened by tapping a card in the feed.
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Alert,
+  View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Alert, Share,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import { supabase } from "../lib/supabase";
 import { colors } from "../theme";
+import ShortLetBooking from "../components/ShortLetBooking";
 
 const { width } = Dimensions.get("window");
 const money = (n) => "₦" + Number(n || 0).toLocaleString();
@@ -15,7 +16,7 @@ function photoList(p) {
   const out = [];
   const ph = p.photos;
   if (Array.isArray(ph)) for (const f of ph) {
-    if (typeof f === "string" && (f.startsWith("http") || f.startsWith("data:"))) out.push(f);
+    if (typeof f === "string" && (f.startsWith("http") || f.startsWith("data:"))) out.push(thumb(f, 1000));
     else if (f && typeof f === "object" && typeof f.url === "string") out.push(f.url);
   }
   return out;
@@ -23,15 +24,43 @@ function photoList(p) {
 
 export default function PropertyDetailScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const p = (route.params && route.params.property) || {};
+  const [p, setP] = useState((route.params && route.params.property) || {});
+  const routeId = (route.params && route.params.id) || (p && p.id);
+  useEffect(() => {
+    if ((!p || !p.title) && routeId) {
+      supabase.from("properties").select("*").eq("id", routeId).single().then(({ data }) => {
+        if (data) { const prop = { ...(data.data || {}), id: data.id, status: data.status, owner_email: data.owner_email }; setP(prop); setStatus(prop.status); }
+      });
+    }
+  }, [routeId]);
   const photos = photoList(p);
   const [status, setStatus] = useState(p.status);
   const verified = status && status !== "Pending Verification";
   const amenities = Array.isArray(p.amenities) ? p.amenities : [];
+  const isShortLet = p.letType === "Short let" || p.letType === "Holiday stay / serviced";
   const [paying, setPaying] = useState(false);
+  const [photoIdx, setPhotoIdx] = useState(0);
+
+  const onReport = () => {
+    const reasons = ["Not available / already taken", "Suspected fraud or fake", "Wrong price or details", "Other"];
+    Alert.alert("Report this listing", "What's the problem?",
+      [...reasons.map(reason => ({ text: reason, onPress: async () => {
+        try {
+          const { data: u } = await supabase.auth.getUser();
+          await supabase.from("reports").insert({ property_id: p.id, reporter_email: (u && u.user && u.user.email) || null, reason });
+          Alert.alert("Thank you", "Girard will review this listing.");
+        } catch (e) { Alert.alert("Couldn't send", "Please try again later."); }
+      }})), { text: "Cancel", style: "cancel" }]);
+  };
+
+  const onShare = async () => {
+    try {
+      await Share.share({ message: (p.title || "Property") + " \u00b7 " + (p.area || "") + (p.rent ? " \u00b7 " + money(p.rent) + "/yr" : "") + "\nOpen in Girard: girard://property/" + (p.id || "") + "\nhttps://girardpropertylimited.com" });
+    } catch (e) {}
+  };
 
   const SITE = "https://girardpropertylimited.com";
-  const onPayBook = async () => {
+  const startPayment = async () => {
     if (paying) return;
     const amountKobo = Math.round(Number(p.rent || 0) * 100);
     if (!amountKobo) { Alert.alert("No price set", "This listing has no rent to pay yet."); return; }
@@ -44,6 +73,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
+          property: p.id,
           amount: amountKobo,
           subaccount: p.subaccount || undefined,
           split_code: p.split_code || undefined,
@@ -72,22 +102,40 @@ export default function PropertyDetailScreen({ route, navigation }) {
     setPaying(false);
   };
 
+  const onPayBook = () => {
+    if (paying) return;
+    if (!p.rent) { Alert.alert("No price set", "This listing has no rent to pay yet."); return; }
+    const fee = Math.round(Number(p.rent) * 0.05);
+    Alert.alert(
+      "Confirm payment",
+      "Property: " + (p.title || "this property") + "\n\nAnnual rent: " + money(p.rent) +
+      "\n\nYou pay the rent in full. Girard's 5% (" + money(fee) + ") is settled from the landlord's proceeds, not added to your total.",
+      [{ text: "Cancel", style: "cancel" }, { text: "Pay " + money(p.rent), onPress: startPayment }]
+    );
+  };
+
   return (
     <View style={styles.wrap}>
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 96 }}>
         {photos.length ? (
-          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}>
-            {photos.map((u, i) => (
-              <Image key={i} source={{ uri: u }} style={{ width, height: 290 }} resizeMode="cover" />
-            ))}
-          </ScrollView>
+          <View>
+            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={e => setPhotoIdx(Math.round(e.nativeEvent.contentOffset.x / width))}>
+              {photos.map((u, i) => (
+                <Image key={i} source={{ uri: u }} style={{ width, height: 290 }} resizeMode="cover" />
+              ))}
+            </ScrollView>
+            {photos.length > 1 ? (
+              <View style={styles.counter}><Text style={styles.counterText}>{(photoIdx + 1) + " / " + photos.length}</Text></View>
+            ) : null}
+          </View>
         ) : (
           <View style={[styles.photoPh, { width, height: 290 }]}>
             <Text style={styles.phText}>GIRARD</Text>
           </View>
         )}
 
-        <TouchableOpacity style={[styles.back, { top: insets.top + 10 }]} onPress={() => navigation.goBack()}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" style={[styles.back, { top: insets.top + 10 }]} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>‹  Back</Text>
         </TouchableOpacity>
 
@@ -121,14 +169,20 @@ export default function PropertyDetailScreen({ route, navigation }) {
               <Text style={styles.desc}>{p.description}</Text>
             </View>
           ) : null}
+
+          {isShortLet ? <ShortLetBooking p={p} /> : null}
+
+          <TouchableOpacity onPress={onReport} style={{ marginTop: 22, alignSelf: "flex-start" }}>
+            <Text style={{ color: colors.slate, fontSize: 13, textDecorationLine: "underline" }}>Report this listing</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <TouchableOpacity style={[styles.payBtn, status !== "Available" && { backgroundColor: "#3A5470" }]} onPress={onPayBook} disabled={paying || status !== "Available"}>
+      {!isShortLet && <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={status !== "Available" ? "Property leased" : (p.rent ? "Pay " + money(p.rent) + " per year" : "Pay or book")} style={[styles.payBtn, status !== "Available" && { backgroundColor: "#3A5470" }]} onPress={onPayBook} disabled={paying || status !== "Available"}>
           <Text style={styles.payText}>{status !== "Available" ? "Leased" : (paying ? "Starting payment\u2026" : (p.rent ? "Pay " + money(p.rent) + " / yr" : "Pay / Book"))}</Text>
         </TouchableOpacity>
-      </View>
+      </View>}
     </View>
   );
 }
@@ -138,6 +192,9 @@ const styles = StyleSheet.create({
   photoPh: { backgroundColor: "#12293F", alignItems: "center", justifyContent: "center" },
   phText: { color: colors.gold, fontSize: 26, fontWeight: "800", letterSpacing: 4, opacity: 0.5 },
   back: { position: "absolute", left: 14, backgroundColor: "rgba(15,36,56,0.7)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  share: { position: "absolute", right: 14, backgroundColor: "rgba(15,36,56,0.7)", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  counter: { position: "absolute", bottom: 12, right: 12, backgroundColor: "rgba(15,36,56,0.75)", borderRadius: 14, paddingHorizontal: 10, paddingVertical: 4 },
+  counterText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   backText: { color: "#fff", fontSize: 14, fontWeight: "700" },
   body: { padding: 20 },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
