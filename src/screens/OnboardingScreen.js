@@ -1,9 +1,8 @@
 import React, { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, useWindowDimensions, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme";
 
-const { width } = Dimensions.get("window");
 const SLIDES = [
   { title: "Verified property", body: "Browse rentals and homes Girard has verified. No fake listings, no guesswork." },
   { title: "Pay rent securely", body: "Pay in the app through Paystack. Your landlord is paid directly and the property is yours." },
@@ -12,6 +11,9 @@ const SLIDES = [
 
 export default function OnboardingScreen({ onDone }) {
   const insets = useSafeAreaInsets();
+  // Read the width LIVE. Reading it once at module load broke iPad, where the
+  // window can be rotated, resized or opened in Stage Manager after launch.
+  const { width } = useWindowDimensions();
   const [idx, setIdx] = useState(0);
   const ref = useRef(null);
   const next = () => {
@@ -46,7 +48,7 @@ export default function OnboardingScreen({ onDone }) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: colors.deep },
-  slide: { alignItems: "center", paddingHorizontal: 34 },
+  slide: { alignItems: "center", justifyContent: "flex-start", paddingHorizontal: 34, maxWidth: 700, alignSelf: "center" },
   logo: { width: 96, height: 96, marginBottom: 18 },
   brand: { color: colors.gold, fontSize: 15, fontWeight: "800", letterSpacing: 3, marginBottom: 40 },
   title: { color: "#fff", fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 14 },

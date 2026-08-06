@@ -1,7 +1,7 @@
 // Property detail — full listing page. Opened by tapping a card in the feed.
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Alert, Share, Modal, TextInput,
+  View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, useWindowDimensions, Alert, Share, Modal, TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
@@ -10,7 +10,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../theme";
 import ShortLetBooking from "../components/ShortLetBooking";
 
-const { width } = Dimensions.get("window");
 const money = (n) => "\u20a6" + String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
 function thumb(url, w) {
@@ -31,6 +30,7 @@ function photoList(p) {
 }
 
 export default function PropertyDetailScreen({ route, navigation }) {
+  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const initial = (route.params && route.params.property) || {};
   const [p, setP] = useState(initial);
