@@ -4,7 +4,7 @@
 //                    with Property detail + My listings stacked over them.
 import "react-native-url-polyfill/auto";
 import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator, AppState } from "react-native";
+import { View, Text, ActivityIndicator, AppState } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -58,7 +58,7 @@ function Tabs() {
   );
 }
 
-export default function App() {
+function AppInner() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [onboarded, setOnboarded] = useState(null);
@@ -67,26 +67,38 @@ export default function App() {
 
   useEffect(() => {
     AsyncStorage.getItem("girard_onboarded").then(v => setOnboarded(!!v)).catch(() => setOnboarded(true));
-    isBioEnabled().then(on => { setBioEnabled_(on); if (on) setLocked(true); });
+    isBioEnabled().then(on => { setBioEnabled_(on); if (on) setLocked(true); }).catch(() => {});
     const appSub = AppState.addEventListener("change", (st) => {
-      if (st === "active") isBioEnabled().then(on => { setBioEnabled_(on); if (on) setLocked(true); });
+      if (st === "active") isBioEnabled().then(on => { setBioEnabled_(on); if (on) setLocked(true); }).catch(() => {});
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+    // The launch gate must ALWAYS resolve. If getSession rejects or never
+    // settles (cold keychain, offline, slow network) the app used to sit on
+    // the spinner forever, which is what App Review saw as a blank page.
+    let settled = false;
+    const finish = (sess) => {
+      if (settled) return;
+      settled = true;
+      setSession(sess || null);
       setLoading(false);
-      if (data.session) registerForPush();
-    });
+      if (sess) { try { registerForPush(); } catch (e) {} }
+    };
+    const timeout = setTimeout(() => finish(null), 8000);
+    supabase.auth.getSession()
+      .then(({ data }) => finish(data && data.session))
+      .catch(() => finish(null))
+      .finally(() => clearTimeout(timeout));
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
-      if (s) registerForPush();
+      if (s) { try { registerForPush(); } catch (e) {} }
     });
-    return () => { sub.subscription.unsubscribe(); appSub.remove(); };
+    return () => { clearTimeout(timeout); sub.subscription.unsubscribe(); appSub.remove(); };
   }, []);
 
   if (loading || onboarded === null) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.deep, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ flex: 1, backgroundColor: colors.deep, alignItems: "center", justifyContent: "center", padding: 30 }}>
         <ActivityIndicator size="large" color={colors.gold} />
+        <Text style={{ color: colors.slate, marginTop: 16, fontSize: 14, fontWeight: "600" }}>Starting Girard</Text>
       </View>
     );
   }
@@ -146,5 +158,15 @@ export default function App() {
       </NavigationContainer>
       </ErrorBoundary>
     </SafeAreaProvider>
+  );
+}
+
+// Wrap the ENTIRE app, including the launch gate. Without this, anything that
+// throws during first render produced a blank screen with no error at all.
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner />
+    </ErrorBoundary>
   );
 }
