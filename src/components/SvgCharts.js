@@ -1,7 +1,7 @@
 // Richer charts using react-native-svg: a donut breakdown and a smooth line
 // trend with a gradient area fill. Kept separate from the zero-dep Charts.js.
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
 import Svg, { Circle, G, Path, Defs, LinearGradient, Stop } from "react-native-svg";
 import { FadeInUp } from "./Charts";
 import { colors } from "../theme";
@@ -52,7 +52,8 @@ export function DonutChart({ segments, size = 168, thickness = 24, centerLabel }
 // Smooth-ish line trend with gradient area. data = [{ label, value }]
 export function LineChart({ data, height = 170, color = colors.gold }) {
   if (!data || data.length === 0) return null;
-  const width = Dimensions.get("window").width - 64;
+  const { width: winW } = useWindowDimensions();
+  const width = winW - 64;
   const pad = 22;
   const n = data.length;
   const max = Math.max(1, ...data.map(d => d.value));
