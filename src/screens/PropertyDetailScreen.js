@@ -233,7 +233,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
 
       {!isShortLet && <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={status !== "Available" ? "Property leased" : (p.rent ? "Pay " + money(p.rent) + " per year" : "Pay or book")} style={[styles.payBtn, status !== "Available" && { backgroundColor: "#3A5470" }]} onPress={onPayBook} disabled={paying || status !== "Available"}>
-          <Text style={styles.payText}>{status !== "Available" ? "Leased" : (paying ? "Starting payment\u2026" : (p.rent ? "Pay " + money(p.rent) + " / yr" : "Pay / Book"))}</Text>
+          <Text style={styles.payText}>{status !== "Available" ? (status === "Awaiting signatures" ? "Under offer" : "Leased") : (paying ? "Starting payment\u2026" : (p.rent ? "Pay " + money(p.rent) + " / yr" : "Pay / Book"))}</Text>
         </TouchableOpacity>
       </View>}
     </View>

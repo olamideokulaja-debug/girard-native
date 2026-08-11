@@ -73,7 +73,9 @@ export default function DashboardScreen({ navigation }) {
           if (d.area) areaMap[d.area] = (areaMap[d.area] || 0) + 1;
           if (d.intent === "For sale") forSale++; else toLet++;
         } else if (p.status === "Pending Verification") pend++;
-        else if (p.status === "Leased") leased++;
+        // A lease has been issued but not yet signed by both parties. Counted
+        // with leased so the chart still totals, but it is not income yet.
+        else if (p.status === "Leased" || p.status === "Awaiting signatures") leased++;
       });
     } catch (e) {}
     const areas = Object.keys(areaMap).map(k => ({ label: k, value: areaMap[k] })).sort((a, b) => b.value - a.value).slice(0, 5);

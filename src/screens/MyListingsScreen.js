@@ -56,7 +56,8 @@ export default function MyListingsScreen({ navigation }) {
         <Text style={[styles.badge,
           p.status === "Available" && styles.bAvail,
           p.status === "Leased" && styles.bLeased,
-          p.status === "Pending Verification" && styles.bPend]}>{p.status}</Text>
+          p.status === "Pending Verification" && styles.bPend,
+          p.status === "Awaiting signatures" && styles.bAwait]}>{p.status}</Text>
         {showApprove ? (
           <TouchableOpacity style={styles.approve} onPress={() => approve(p.id)}>
             <Text style={styles.approveText}>Approve</Text>
@@ -111,6 +112,7 @@ const styles = StyleSheet.create({
   bAvail: { backgroundColor: colors.gold, color: colors.deep },
   bLeased: { backgroundColor: "#3A5470", color: "#fff" },
   bPend: { backgroundColor: "#7A5C00", color: "#fff" },
+  bAwait: { backgroundColor: "#1FA5A0", color: "#fff" },
   approve: { marginTop: 10, backgroundColor: colors.teal, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   approveText: { color: "#fff", fontWeight: "800", fontSize: 12.5 },
   emptyBox: { alignItems: "center", marginTop: 40, paddingHorizontal: 20 },
