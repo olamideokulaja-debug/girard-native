@@ -78,6 +78,11 @@ export default function PropertyDetailScreen({ route, navigation }) {
   const verified = status && status !== "Pending Verification";
   const amenities = Array.isArray(p.amenities) ? p.amenities : [];
   const isShortLet = p.letType === "Short let" || p.letType === "Holiday stay / serviced";
+  // Sale, short let and long let are THREE cases, not two. A sale has no period
+  // at all; pricing it "per year" is nonsense.
+  const isSale = (p.intent || "To let") === "For sale";
+  const priceValue = isShortLet ? (p.nightly || p.rent) : p.rent;
+  const pricePeriod = isSale ? "" : isShortLet ? " / night" : " / yr";
 
   const onReport = () => {
     const reasons = ["Not available / already taken", "Suspected fraud or fake", "Wrong price or details", "Other"];
@@ -93,7 +98,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
 
   const onShare = async () => {
     try {
-      await Share.share({ message: (p.title || "Property") + " \u00b7 " + (p.area || "") + (p.rent ? " \u00b7 " + money(isShortLet ? (p.nightly || p.rent) : p.rent) + (isShortLet ? "/night" : "/yr") : "") + "\nOpen in Girard: girard://property/" + (p.id || "") + "\nhttps://girardpropertylimited.com" });
+      await Share.share({ message: (p.title || "Property") + " \u00b7 " + (p.area || "") + (priceValue ? " \u00b7 " + money(priceValue) + pricePeriod.replace(/ /g, "") : "") + "\nOpen in Girard: girard://property/" + (p.id || "") + "\nhttps://girardpropertylimited.com" });
     } catch (e) {}
   };
 
@@ -151,6 +156,9 @@ export default function PropertyDetailScreen({ route, navigation }) {
 
   const onPayBook = () => {
     if (paying) return;
+    // A sale is not a rent payment. Nobody buys a property of this value by
+    // tapping Pay, so route it to an enquiry rather than a Paystack charge.
+    if (isSale) { setEnqOpen(true); return; }
     if (!p.rent) { Alert.alert("No price set", "This listing has no rent to pay yet."); return; }
     const fee = Math.round(Number(p.rent) * 0.05);
     Alert.alert(
@@ -196,7 +204,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
           </Text>
           {p.address ? <View style={styles.addrRow}><Ionicons name="location-outline" size={15} color={colors.slate} /><Text style={styles.address}>{p.address}</Text></View> : null}
 
-          <Text style={styles.rent}>{isShortLet ? (p.nightly || p.rent ? money(p.nightly || p.rent) + " / night" : "Price on request") : (p.rent ? money(p.rent) + " / yr" : "Price on request")}</Text>
+          <Text style={styles.rent}>{priceValue ? money(priceValue) + pricePeriod : "Price on request"}</Text>
           {(p.letType || p.term) ? (
             <Text style={styles.subline}>{[p.letType, p.term].filter(Boolean).join("  ·  ")}</Text>
           ) : null}
@@ -246,8 +254,8 @@ export default function PropertyDetailScreen({ route, navigation }) {
       </Modal>
 
       {!isShortLet && <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel={status !== "Available" ? "Property leased" : (p.rent ? "Pay " + money(p.rent) + " per year" : "Pay or book")} style={[styles.payBtn, status !== "Available" && { backgroundColor: "#3A5470" }]} onPress={onPayBook} disabled={paying || status !== "Available"}>
-          <Text style={styles.payText}>{status !== "Available" ? (status === "Awaiting signatures" ? "Under offer" : "Leased") : (paying ? "Starting payment\u2026" : (p.rent ? "Pay " + money(p.rent) + " / yr" : "Pay / Book"))}</Text>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel={status !== "Available" ? "Property leased" : (priceValue ? (isSale ? "Enquire to buy" : "Pay " + money(priceValue) + (isShortLet ? " per night" : " per year")) : "Pay or book")} style={[styles.payBtn, status !== "Available" && { backgroundColor: "#3A5470" }]} onPress={onPayBook} disabled={paying || status !== "Available"}>
+          <Text style={styles.payText}>{status !== "Available" ? (status === "Awaiting signatures" ? "Under offer" : "Leased") : (paying ? "Starting payment\u2026" : (priceValue ? (isSale ? "Enquire to buy" : "Pay " + money(priceValue) + pricePeriod) : "Pay / Book"))}</Text>
         </TouchableOpacity>
       </View>}
     </View>
