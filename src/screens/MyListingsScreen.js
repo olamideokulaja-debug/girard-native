@@ -50,7 +50,15 @@ export default function MyListingsScreen({ navigation }) {
       <View style={{ flex: 1, marginRight: 10 }}>
         <Text style={styles.title} numberOfLines={1}>{p.title || "Untitled property"}</Text>
         <Text style={styles.meta} numberOfLines={1}>{[p.area, p.type, p.beds ? p.beds + " bed" : null].filter(Boolean).join("  \u00b7  ")}</Text>
-        <Text style={styles.rent}>{p.rent ? money(p.rent) + " / yr" : "\u2014"}</Text>
+        <Text style={styles.rent}>{(() => {
+          // Sale, short let and long let are three different things; a short
+          // let priced per year reads as an absurd figure.
+          const short = p.letType === "Short let" || p.letType === "Holiday stay / serviced";
+          const sale = (p.intent || "To let") === "For sale";
+          const val = short ? (p.nightly || p.rent) : p.rent;
+          if (!val) return "\u2014";
+          return money(val) + (sale ? "" : short ? " / night" : " / yr");
+        })()}</Text>
       </View>
       <View style={{ alignItems: "flex-end" }}>
         <Text style={[styles.badge,

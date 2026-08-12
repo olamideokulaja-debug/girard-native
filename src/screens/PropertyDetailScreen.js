@@ -93,7 +93,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
 
   const onShare = async () => {
     try {
-      await Share.share({ message: (p.title || "Property") + " \u00b7 " + (p.area || "") + (p.rent ? " \u00b7 " + money(p.rent) + "/yr" : "") + "\nOpen in Girard: girard://property/" + (p.id || "") + "\nhttps://girardpropertylimited.com" });
+      await Share.share({ message: (p.title || "Property") + " \u00b7 " + (p.area || "") + (p.rent ? " \u00b7 " + money(isShortLet ? (p.nightly || p.rent) : p.rent) + (isShortLet ? "/night" : "/yr") : "") + "\nOpen in Girard: girard://property/" + (p.id || "") + "\nhttps://girardpropertylimited.com" });
     } catch (e) {}
   };
 
@@ -196,7 +196,7 @@ export default function PropertyDetailScreen({ route, navigation }) {
           </Text>
           {p.address ? <View style={styles.addrRow}><Ionicons name="location-outline" size={15} color={colors.slate} /><Text style={styles.address}>{p.address}</Text></View> : null}
 
-          <Text style={styles.rent}>{p.rent ? money(p.rent) + " / yr" : "Price on request"}</Text>
+          <Text style={styles.rent}>{isShortLet ? (p.nightly || p.rent ? money(p.nightly || p.rent) + " / night" : "Price on request") : (p.rent ? money(p.rent) + " / yr" : "Price on request")}</Text>
           {(p.letType || p.term) ? (
             <Text style={styles.subline}>{[p.letType, p.term].filter(Boolean).join("  ·  ")}</Text>
           ) : null}
