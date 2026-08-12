@@ -4,7 +4,7 @@
 //                    with Property detail + My listings stacked over them.
 import "react-native-url-polyfill/auto";
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, AppState } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, AppState } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -36,6 +36,48 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const TAB_ICONS = { Home: "home", Browse: "search", Messages: "chatbubble-ellipses", Account: "person" };
+
+/* What a signed-out visitor sees: the listings, and an invitation to join.
+   Everything that genuinely needs an identity (paying, messaging, saving,
+   listing a property) still asks them to sign in first. */
+function GuestAccountScreen({ navigation }) {
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.deep, alignItems: "center", justifyContent: "center", padding: 32 }}>
+      <Ionicons name="person-circle-outline" size={64} color={colors.gold} />
+      <Text style={{ color: "#fff", fontSize: 22, fontWeight: "800", marginTop: 18, textAlign: "center" }}>Create your Girard account</Text>
+      <Text style={{ color: colors.slate, fontSize: 15, lineHeight: 23, textAlign: "center", marginTop: 10, maxWidth: 420 }}>
+        Browsing is open to everyone. Sign in to save properties, message the Girard team, pay rent and manage a tenancy.
+      </Text>
+      <TouchableOpacity
+        onPress={() => navigation.navigate("SignUp")}
+        style={{ backgroundColor: colors.teal, borderRadius: 12, paddingVertical: 15, paddingHorizontal: 40, marginTop: 26, minWidth: 240, alignItems: "center" }}>
+        <Text style={{ color: "#fff", fontSize: 16, fontWeight: "800" }}>Create account</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate("SignIn")} style={{ marginTop: 16 }}>
+        <Text style={{ color: colors.gold, fontSize: 15, fontWeight: "700" }}>I already have an account</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function GuestTabs() {
+  const insets = useSafeAreaInsets();
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: { backgroundColor: colors.ink, borderTopColor: "#22405E", borderTopWidth: 1, height: 60 + insets.bottom, paddingBottom: 8 + insets.bottom, paddingTop: 6 },
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: colors.slate,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+        tabBarIcon: ({ color, size }) => <Ionicons name={TAB_ICONS[route.name] || "ellipse"} size={size} color={color} />,
+      })}
+    >
+      <Tab.Screen name="Browse" component={ListingsScreen} />
+      <Tab.Screen name="Account" component={GuestAccountScreen} />
+    </Tab.Navigator>
+  );
+}
 
 function Tabs() {
   const insets = useSafeAreaInsets();
@@ -150,6 +192,8 @@ function AppInner() {
             </>
           ) : (
             <>
+              <Stack.Screen name="Tabs" component={GuestTabs} />
+              <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
               <Stack.Screen name="SignIn" component={SignInScreen} />
               <Stack.Screen name="SignUp" component={SignUpScreen} />
             </>
