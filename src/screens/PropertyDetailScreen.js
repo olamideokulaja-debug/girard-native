@@ -51,6 +51,11 @@ export default function PropertyDetailScreen({ route, navigation }) {
       const email = (user && user.email) || null;
       const meta = (user && user.user_metadata) || {};
       const name = meta.full_name || meta.name || (email ? email.split("@")[0] : "Guest");
+      if (!email && !enqPhone.trim()) {
+        setEnqSending(false);
+        Alert.alert("How should we reach you?", "Add a phone number, or sign in so we have your email.");
+        return;
+      }
       const { error } = await supabase.from("enquiries").insert([{
         id: "EN-" + Date.now(), type: "Enquiry", prop_id: p.id, prop_title: p.title || null,
         area: p.area || null, name, phone: enqPhone || null, email, message: enqMsg.trim(), status: "New",
@@ -100,7 +105,16 @@ export default function PropertyDetailScreen({ route, navigation }) {
     setPaying(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      const email = (u && u.user && u.user.email) || "customer@girardpropertylimited.com";
+      const email = u && u.user && u.user.email;
+      if (!email) {
+        setPaying(false);
+        Alert.alert(
+          "Sign in to pay",
+          "Paying rent needs an account so the payment and your receipt are recorded against you.",
+          [{ text: "Not now", style: "cancel" }, { text: "Sign in", onPress: () => navigation.navigate("SignIn") }]
+        );
+        return;
+      }
       const initRes = await fetch(SITE + "/api/paystack-initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

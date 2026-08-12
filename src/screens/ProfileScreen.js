@@ -44,15 +44,40 @@ export default function ProfileScreen({ navigation }) {
       <Text style={styles.rowValue} numberOfLines={1}>{value || "\u2014"}</Text>
     </View>
   );
-  const Link = ({ label, icon, onPress }) => (
-    <TouchableOpacity style={styles.linkRow} onPress={onPress}>
+  const Link = ({ label, icon, onPress, danger }) => (
+    <TouchableOpacity style={styles.linkRow} onPress={onPress} accessibilityRole="button">
       <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-        {icon ? <Ionicons name={icon} size={18} color={colors.gold} style={{ marginRight: 12 }} /> : null}
-        <Text style={styles.linkText}>{label}</Text>
+        {icon ? <Ionicons name={icon} size={18} color={danger ? "#E06A5F" : colors.gold} style={{ marginRight: 12 }} /> : null}
+        <Text style={[styles.linkText, danger && { color: "#E06A5F" }]}>{label}</Text>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.slate} />
     </TouchableOpacity>
   );
+
+  const requestDelete = () => {
+    Alert.alert(
+      "Delete your account?",
+      "This removes your profile, saved properties and messages. Completed payments and signed tenancy agreements are kept where the law requires it. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const { data } = await supabase.auth.getUser();
+              const email = (data && data.user && data.user.email) || "";
+              await supabase.from("account_deletions").insert([{ email, requested_at: new Date().toISOString() }]);
+              await supabase.auth.signOut();
+              Alert.alert("Account deletion requested", "You have been signed out. Your account and personal data will be removed within 30 days, and sooner where possible.");
+            } catch (e) {
+              Alert.alert("Could not complete that", "Please email support@girardpropertylimited.com and we will delete your account.");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.wrap}>
@@ -122,6 +147,15 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
 
+        <Text style={styles.section}>ACCOUNT</Text>
+        <View style={styles.card}>
+          <Link label="Delete my account" icon="trash-outline" danger onPress={requestDelete} />
+        </View>
+        <Text style={styles.deleteNote}>
+          Deleting your account removes your profile, saved properties and messages. Records we
+          must keep by law, such as completed payments and signed tenancy agreements, are retained.
+        </Text>
+
         <Text style={styles.version}>Girard Property Estate Limited</Text>
       </ScrollView>
     </View>
@@ -154,5 +188,6 @@ const styles = StyleSheet.create({
   payTitle: { color: "#fff", fontSize: 14.5, fontWeight: "600" },
   paySub: { color: colors.slate, fontSize: 12, marginTop: 3 },
   payAmount: { color: colors.teal, fontSize: 15, fontWeight: "800" },
+  deleteNote: { color: colors.slate, fontSize: 11.5, lineHeight: 17, paddingHorizontal: 18, marginTop: 10 },
   version: { textAlign: "center", color: colors.slate, fontSize: 12, marginTop: 22 },
 });
