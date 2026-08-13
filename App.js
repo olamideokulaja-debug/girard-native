@@ -64,6 +64,7 @@ function GuestTabs() {
   const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
+      initialRouteName="Browse"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: { backgroundColor: colors.ink, borderTopColor: "#22405E", borderTopWidth: 1, height: 60 + insets.bottom, paddingBottom: 8 + insets.bottom, paddingTop: 6 },
@@ -83,6 +84,7 @@ function Tabs() {
   const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: { backgroundColor: colors.ink, borderTopColor: "#22405E", borderTopWidth: 1, height: 60 + insets.bottom, paddingBottom: 8 + insets.bottom, paddingTop: 8 },
@@ -192,7 +194,7 @@ function AppInner() {
             </>
           ) : (
             <>
-              <Stack.Screen name="Tabs" component={GuestTabs} />
+              <Stack.Screen name="GuestTabs" component={GuestTabs} />
               <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
               <Stack.Screen name="SignIn" component={SignInScreen} />
               <Stack.Screen name="SignUp" component={SignUpScreen} />
