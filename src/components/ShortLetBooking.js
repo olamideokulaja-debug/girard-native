@@ -112,7 +112,7 @@ export default function ShortLetBooking({ p }) {
       <TouchableOpacity onPress={() => setBase(addMonths(base, 1))}><Text style={styles.more}>Show later dates ›</Text></TouchableOpacity>
       {ci && co ? (
         <View style={styles.summary}>
-          <Text style={styles.sumLine}>{fmtShort(ci)} \u2192 {fmtShort(co)}  \u00b7  {nights} night{nights > 1 ? "s" : ""}</Text>
+          <Text style={styles.sumLine}>{fmtShort(ci) + " \u2192 " + fmtShort(co) + "  \u00b7  " + nights + " night" + (nights > 1 ? "s" : "")}</Text>
           <Text style={styles.sumTotal}>{money(total)}</Text>
         </View>
       ) : <Text style={styles.hint}>Tap a check-in date, then a check-out date.</Text>}
