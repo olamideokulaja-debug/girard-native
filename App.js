@@ -3,7 +3,7 @@
 //   logged in     -> bottom tabs (Home / Browse / Messages / Account),
 //                    with Property detail + My listings stacked over them.
 import "react-native-url-polyfill/auto";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, AppState } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -108,12 +108,26 @@ function AppInner() {
   const [onboarded, setOnboarded] = useState(null);
   const [bioEnabled, setBioEnabled_] = useState(false);
   const [locked, setLocked] = useState(false);
+  /* Re-locking used to fire on ANY transition to "active". The Face ID sheet
+     itself pushes the app to "inactive" and back to "active", so a successful
+     unlock immediately re-locked and the prompt looped forever. We now track
+     the previous state and only re-lock coming back from a real background,
+     never from the momentary "inactive" a system sheet causes, and we hold off
+     briefly after an unlock. */
+  const appStateRef = useRef(AppState.currentState);
+  const lastUnlockRef = useRef(0);
+  const RELOCK_GRACE_MS = 8000;
 
   useEffect(() => {
     AsyncStorage.getItem("girard_onboarded").then(v => setOnboarded(!!v)).catch(() => setOnboarded(true));
     isBioEnabled().then(on => { setBioEnabled_(on); if (on) setLocked(true); }).catch(() => {});
     const appSub = AppState.addEventListener("change", (st) => {
-      if (st === "active") isBioEnabled().then(on => { setBioEnabled_(on); if (on) setLocked(true); }).catch(() => {});
+      const prev = appStateRef.current;
+      appStateRef.current = st;
+      // Only a genuine return from the background should re-lock.
+      if (st !== "active" || prev !== "background") return;
+      if (Date.now() - lastUnlockRef.current < RELOCK_GRACE_MS) return;
+      isBioEnabled().then(on => { setBioEnabled_(on); if (on) setLocked(true); }).catch(() => {});
     });
     // The launch gate must ALWAYS resolve. If getSession rejects or never
     // settles (cold keychain, offline, slow network) the app used to sit on
@@ -156,11 +170,13 @@ function AppInner() {
     );
   }
 
+  const unlock = () => { lastUnlockRef.current = Date.now(); appStateRef.current = "active"; setLocked(false); };
+
   if (session && bioEnabled && locked) {
     return (
       <SafeAreaProvider>
         <StatusBar style="light" />
-        <ErrorBoundary><LockScreen onUnlock={() => setLocked(false)} /></ErrorBoundary>
+        <ErrorBoundary><LockScreen onUnlock={unlock} /></ErrorBoundary>
       </SafeAreaProvider>
     );
   }
