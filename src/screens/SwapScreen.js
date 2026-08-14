@@ -117,7 +117,7 @@ export default function SwapScreen({ navigation }) {
           ) : (
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Your swap is in progress</Text>
-              <Text style={styles.propLine}>{journey.prop.market}  \u00b7  {journey.prop.area}</Text>
+              <Text style={styles.propLine}>{journey.prop.market + "  \u00b7  " + journey.prop.area}</Text>
               <Text style={styles.propVal}>{journey.prop.currency}{Number(journey.prop.value || 0).toLocaleString ? String(journey.prop.value).replace(/\B(?=(\d{3})+(?!\d))/g, ",") : journey.prop.value}</Text>
               <Text style={styles.stageNow}>Current step: {STEPS[step]}</Text>
               <Text style={styles.propNote}>Document checks, matching, negotiation, contracts and escrow are handled on the website for security and legal signing.</Text>

@@ -49,7 +49,7 @@ export default function EarningsScreen({ navigation }) {
           <View style={styles.hero}>
             <Text style={styles.heroLabel}>Your share received (after Girard 5%)</Text>
             <CountUp value={Math.round((data.net || 0) / 100)} style={styles.heroValue} format={(n) => "₦" + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} />
-            <Text style={styles.heroSub}>{money(data.total)} gross  \u00b7  {data.count} payment{data.count === 1 ? "" : "s"}  \u00b7  {data.listings} listing{data.listings === 1 ? "" : "s"}</Text>
+            <Text style={styles.heroSub}>{money(data.total) + " gross  \u00b7  " + data.count + " payment" + (data.count === 1 ? "" : "s") + "  \u00b7  " + data.listings + " listing" + (data.listings === 1 ? "" : "s")}</Text>
           </View>
 
           {(() => {
@@ -73,7 +73,7 @@ export default function EarningsScreen({ navigation }) {
           <View style={styles.card}>
             {acct && (acct.acct_no || acct.subaccount) ? (
               <View>
-                <Text style={styles.acctName}>{acct.bank_name || "Bank"}  \u00b7  {acct.acct_no || ""}</Text>
+                <Text style={styles.acctName}>{(acct.bank_name || "Bank") + "  \u00b7  " + (acct.acct_no || "")}</Text>
                 <Text style={styles.acctSub}>{acct.acct_name || ""}{acct.bvn_verified ? "  \u00b7  Verified" : "  \u00b7  Pending verification"}</Text>
                 <Text style={styles.acctNote}>Your 95% is settled here automatically by Paystack after each payment.</Text>
               </View>
